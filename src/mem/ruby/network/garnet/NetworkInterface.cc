@@ -223,6 +223,7 @@ namespace gem5
                     if (b->isReady(curTime))
                     { // Is there a message waiting
                         msg_ptr = b->peekMsgPtr();
+                        std::cout << msg_ptr->getMessageSize();
                         if (flitisizeMessage(msg_ptr, vnet))
                         {
                             b->dequeue(curTime);
@@ -483,6 +484,8 @@ namespace gem5
                                             m_net_ptr->MessageSizeType_to_int(
                                                 net_msg_ptr->getMessageSize()),
                                             oPort->bitWidth(), curTick());
+                        fl->print(std::cout);
+                        std::cout << "\n";
 
                         fl->set_src_delay(curTick() - msg_ptr->getTime());
                         niOutVcs[vc].insert(fl);

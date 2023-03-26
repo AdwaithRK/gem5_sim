@@ -115,7 +115,11 @@ class flit
 
     uint32_t m_width;
     int msgSize;
+                int get_flit_id() { return m_flit_id; }
+                void set_flit_id(int x) { m_flit_id = x; }
+
   protected:
+                int m_flit_id;
     int m_packet_id;
     int m_id;
     int m_vnet;
