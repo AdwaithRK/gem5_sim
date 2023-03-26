@@ -33,6 +33,8 @@
 #include "base/intmath.hh"
 #include "debug/RubyNetwork.hh"
 
+static int flit_counter = 0;
+
 namespace gem5
 {
 
@@ -46,6 +48,7 @@ namespace garnet
 flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
     MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
 {
+                m_flit_id = flit_counter++;
     m_size = size;
     m_msg_ptr = msg_ptr;
     m_enqueue_time = curTime;
@@ -107,8 +110,9 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 
 // Flit can be printed out for debugging purposes
 void
-flit::print(std::ostream& out) const
+            flit::print(std::ostream &out) const
 {
+                out << "Flit_ID=" << m_flit_id << " ";
     out << "[flit:: ";
     out << "PacketId=" << m_packet_id << " ";
     out << "Id=" << m_id << " ";

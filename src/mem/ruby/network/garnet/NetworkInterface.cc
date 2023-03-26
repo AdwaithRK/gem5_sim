@@ -486,6 +486,7 @@ namespace gem5
 
                         fl->set_src_delay(curTick() - msg_ptr->getTime());
                         niOutVcs[vc].insert(fl);
+                        fl->print(std::cout);
                     }
 
                     m_ni_out_vcs_enqueue_time[vc] = curTick();
