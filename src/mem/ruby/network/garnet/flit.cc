@@ -45,10 +45,11 @@ namespace garnet
 {
 
 // Constructor for the flit
-flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
-    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
+            flit::flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
+                    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime, bool increment)
 {
-                m_flit_id = flit_counter++;
+                if (increment)
+                    m_flit_id = ++flit_counter;
     m_size = size;
     m_msg_ptr = msg_ptr;
     m_enqueue_time = curTime;
@@ -64,7 +65,8 @@ flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
     m_width = bWidth;
     msgSize = MsgSize;
 
-    if (size == 1) {
+                if (size == 1)
+                {
         m_type = HEAD_TAIL_;
         return;
     }
@@ -75,6 +77,10 @@ flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
     else
         m_type = BODY_;
 }
+
+            flit::flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
+                    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
+                    : flit(packet_id, id, vc, vnet, route, size, msg_ptr, MsgSize, bWidth, curTime, false) {}
 
 flit *
 flit::serialize(int ser_id, int parts, uint32_t bWidth)
@@ -112,8 +118,8 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 void
             flit::print(std::ostream &out) const
 {
+                out << "\n\n[flit:: ";
                 out << "Flit_ID=" << m_flit_id << " ";
-    out << "[flit:: ";
     out << "PacketId=" << m_packet_id << " ";
     out << "Id=" << m_id << " ";
     out << "Type=" << m_type << " ";
@@ -125,8 +131,10 @@ void
     out << "Dest NI=" << m_route.dest_ni << " ";
     out << "Dest Router=" << m_route.dest_router << " ";
     out << "Set Time=" << m_time << " ";
-    out << "Width=" << m_width<< " ";
+                out << "Width=" << m_width << " ";
     out << "]";
+
+                out << endl;
 }
 
 bool
