@@ -119,9 +119,22 @@ class flit
     uint32_t m_width;
     int msgSize;
                 int get_flit_id() { return m_flit_id; }
-                void set_flit_id(int x) { m_flit_id = x; }
+
+
+    void add_to_path(int x) {m_path.push_back(x);}
+
+    void print_path(){
+        cout<<"Flit ID = "<<m_flit_id<<" ; Src = "<<m_route.src_router <<" ; Dest = "<< m_route.dest_router<< " ; Path = ";
+        int n = m_path.size();
+        for(int i=0;i<n;i++){
+            if(i!=n-1) cout<<m_path[i]<<" --> ";
+            else cout<<m_path[i];
+        }
+        cout<<"\n";
+    }
 
   protected:
+    vector<int> m_path;
                 int m_flit_id;
     int m_packet_id;
     int m_id;

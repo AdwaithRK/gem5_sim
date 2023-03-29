@@ -253,6 +253,9 @@ namespace gem5
                         int vnet = t_flit->get_vnet();
                         t_flit->set_dequeue_time(curTick());
 
+                        if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
+                            t_flit -> print_path();
+
                         // If a tail flit is received, enqueue into the protocol buffers
                         // if space is available. Otherwise, exchange non-tail flits for
                         // credits.
