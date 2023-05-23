@@ -33,6 +33,8 @@
 
 #include <cassert>
 #include <iostream>
+#include <bits/stdc++.h>
+using namespace std;
 
 #include "base/types.hh"
 #include "mem/ruby/network/garnet/CommonTypes.hh"

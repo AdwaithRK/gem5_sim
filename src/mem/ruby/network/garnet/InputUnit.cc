@@ -94,17 +94,42 @@ InputUnit::wakeup()
         if ((t_flit->get_type() == HEAD_) ||
             (t_flit->get_type() == HEAD_TAIL_)) {
 
+            if(m_router -> get_id() == 5 && t_flit->get_type() == HEAD_ ){
+                std :: cout << "!!!!here in router : " << m_router -> get_id() << "!!!!!\n";
+                RouteInfo temp =  t_flit -> get_route();
+                //t_flit -> changeDestination(3);
+                std::cout << "source router :" << temp.src_router << "\n";
+
+                if(temp.src_router == 4 && temp.dest_router == 15){
+                    std::cout << "\n---------!!!Now I am changing the destination!!!-------------\n";
+                    temp.dest_router = 3;
+                    t_flit -> set_route(temp);
+                }
+                //std:: cout << "destination id : \n";
+            }
+
             assert(virtualChannels[vc].get_state() == IDLE_);
             set_vc_active(vc, curTick());
 
             // Route computation for this vc
+            //std::cout << "Flit id here : " << t_flit -> get_flit_id() << "\n";
             int outport = m_router->route_compute(t_flit->get_route(),
-                m_id, m_direction);
+                m_id, m_direction, t_flit -> get_flit_id());
+            
+            if( t_flit->get_type() == HEAD_TAIL_ ) {
+                std::cout << "head tail flit \n";
+
+            }
+
+
+            cout << "out port I got here = " << outport << "\n";
 
             // Update output port in VC
             // All flits in this packet will use this output port
             // The output port field in the flit is updated after it wins SA
             grant_outport(vc, outport);
+            
+           // std::cout<< "Flit id : " << t_flit -> get_flit_id() << "\nFlit is at Router "<<m_router->get_id()<<"\n";
 
         } else {
             assert(virtualChannels[vc].get_state() == ACTIVE_);

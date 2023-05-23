@@ -223,7 +223,9 @@ namespace gem5
                     if (b->isReady(curTime))
                     { // Is there a message waiting
                         msg_ptr = b->peekMsgPtr();
-                        std::cout << msg_ptr->getMessageSize();
+                        // std::cout << std::endl
+                        //           << "Message type:" << msg_ptr->getMessageSize() << std::endl
+                        //           << std::endl;
                         if (flitisizeMessage(msg_ptr, vnet))
                         {
                             b->dequeue(curTime);
@@ -237,7 +239,7 @@ namespace gem5
                 // message is enqueued to restrict ejection to one message per cycle.
                 checkStallQueue();
 
-                DPRINTF(AdwaithTest, "ADWAITH!!!!!", 0);
+                // DPRINTF(AdwaithTest, "ADWAITH!!!!!", 0);
 
                 /*********** Check the incoming flit link **********/
                 DPRINTF(RubyNetwork, "Number of input ports: %d\n", inPorts.size());
@@ -254,7 +256,7 @@ namespace gem5
                         t_flit->set_dequeue_time(curTick());
 
                         if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
-                            t_flit -> print_path();
+                            t_flit->print_path();
 
                         // If a tail flit is received, enqueue into the protocol buffers
                         // if space is available. Otherwise, exchange non-tail flits for
@@ -486,13 +488,13 @@ namespace gem5
                                             i, vc, vnet, route, num_flits, new_msg_ptr,
                                             m_net_ptr->MessageSizeType_to_int(
                                                 net_msg_ptr->getMessageSize()),
-                                            oPort->bitWidth(), curTick());
+                                            oPort->bitWidth(), curTick(), true);
                         fl->print(std::cout);
                         std::cout << "\n";
 
                         fl->set_src_delay(curTick() - msg_ptr->getTime());
                         niOutVcs[vc].insert(fl);
-                        fl->print(std::cout);
+                        // fl->print(std::cout);
                     }
 
                     m_ni_out_vcs_enqueue_time[vc] = curTick();
