@@ -102,7 +102,7 @@ InputUnit::wakeup()
 
                 if(temp.src_router == 4 && temp.dest_router == 15){
                     std::cout << "\n---------!!!Now I am changing the destination!!!-------------\n";
-                    temp.dest_router = 3;
+                    temp.dest_router = 6;
                     t_flit -> set_route(temp);
                 }
                 //std:: cout << "destination id : \n";
@@ -123,6 +123,7 @@ InputUnit::wakeup()
 
 
             cout << "out port I got here = " << outport << "\n";
+            cout << "virtual channel : " << vc << "\n";
 
             // Update output port in VC
             // All flits in this packet will use this output port

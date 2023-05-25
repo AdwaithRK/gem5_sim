@@ -167,7 +167,7 @@ RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 
 int
 RoutingUnit::outportCompute(RouteInfo route, int inport,
-                            PortDirection inport_dirn)
+                            PortDirection inport_dirn, int flit_id)
 {
     int outport = -1;
 
