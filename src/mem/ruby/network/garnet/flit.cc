@@ -64,6 +64,9 @@ namespace garnet
     m_stage.second = curTime;
     m_width = bWidth;
     msgSize = MsgSize;
+                is_modified = false;
+                modified_destination = -1;
+                m_original_did = route.dest_router;
 
                 if (size == 1)
                 {
@@ -136,6 +139,20 @@ void
 
                 out << endl;
 }
+
+            void flit::changeDestination(int new_destination){
+                is_modified = true;
+                modified_destination = new_destination;
+                
+            }
+
+            bool flit::isModified(){
+                return is_modified;
+            }
+
+            int flit::modifiedLocation(){
+                return modified_destination;
+            }
 
 bool
 flit::functionalRead(Packet *pkt, WriteMask &mask)

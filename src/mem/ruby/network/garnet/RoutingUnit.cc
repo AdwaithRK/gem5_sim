@@ -167,9 +167,18 @@ RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 
 int
 RoutingUnit::outportCompute(RouteInfo route, int inport,
-                            PortDirection inport_dirn, int flit_id)
+                            PortDirection inport_dirn, int flit_id, bool is_modified)
 {
     int outport = -1;
+
+    if(is_modified){
+        std::cout << "\nhere in modified routing algorithm\n";
+        outport = outportComputeXYModified(route, inport, inport_dirn, flit_id);
+
+        return outport;
+    }
+
+
 
     if (route.dest_router == m_router->get_id()) {
 
@@ -201,11 +210,8 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     return outport;
 }
 
-// XY routing implemented using port directions
-// Only for reference purpose in a Mesh
-// By default Garnet uses the routing table
 int
-RoutingUnit::outportComputeXY(RouteInfo route,
+RoutingUnit::outportComputeXYModified(RouteInfo route,
                               int inport,
                               PortDirection inport_dirn, int flit_id)
 {
@@ -251,24 +257,107 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 
     if (x_hops > 0) {
         if (x_dirn) {
-            assert(inport_dirn == "Local" || inport_dirn == "West");
+            //assert(inport_dirn == "Local" || inport_dirn == "West");
             std:: cout << "Going to East\n";
             outport_dirn = "East";
         } else {
-            assert(inport_dirn == "Local" || inport_dirn == "East");
+            // assert(inport_dirn == "Local" || inport_dirn == "East");
             std:: cout << "Going to West\n";
             outport_dirn = "West";
         }
     } else if (y_hops > 0) {
         if (y_dirn) {
             // "Local" or "South" or "West" or "East"
-            assert(inport_dirn != "North");
+            //assert(inport_dirn != "North");
             std:: cout << "Going to North\n";
             outport_dirn = "North";
         } else {
             // "Local" or "North" or "West" or "East"
-            assert(inport_dirn != "South");
+            //assert(inport_dirn != "South");
             std:: cout << "Going to South\n";
+            outport_dirn = "South";
+        }
+    } else {
+        // x_hops == 0 and y_hops == 0
+        // this is not possible
+        // already checked that in outportCompute() function
+        panic("x_hops == y_hops == 0");
+    }
+
+    return m_outports_dirn2idx[outport_dirn];
+}
+
+
+
+
+// XY routing implemented using port directions
+// Only for reference purpose in a Mesh
+// By default Garnet uses the routing table
+int
+RoutingUnit::outportComputeXY(RouteInfo route,
+                              int inport,
+                              PortDirection inport_dirn, int flit_id)
+{
+    PortDirection outport_dirn = "Unknown";
+
+    [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
+    int num_cols = m_router->get_net_ptr()->getNumCols();
+    std :: cout << "\n\n\nNumber of columns : " << num_cols << "\n"; 
+    assert(num_rows > 0 && num_cols > 0);
+
+    int my_id = m_router->get_id();
+
+
+    // cout << "Router id : " << my_id << "\n";
+    // cout << "flit_id : " << flit_id << "\n";
+    // cout << "Input port direction: " << inport_dirn << "\n";
+    int my_x = my_id % num_cols;
+    int my_y = my_id / num_cols;
+
+    int dest_id = route.dest_router;
+    int dest_x = dest_id % num_cols;
+    int dest_y = dest_id / num_cols;
+
+    int x_hops = abs(dest_x - my_x);
+    int y_hops = abs(dest_y - my_y);
+
+    bool x_dirn = (dest_x >= my_x);
+    bool y_dirn = (dest_y >= my_y);
+
+
+    // cout << "my x : " << my_x << "\n";
+    // cout << "my y : " << my_y << "\n";
+    // cout << "destination_id : " << dest_id << "\n";
+    // cout << "destination x : " << dest_x << "\n";
+    // cout << "destination y : " << dest_y << "\n";
+    // cout << "x hops : " << x_hops << "\n";
+    // cout << "y hops : " << y_hops << "\n";
+    // cout << "x direction : " << x_dirn << "\n";
+    // cout << "y direction : " << y_dirn << "\n";
+
+    // already checked that in outportCompute() function
+    assert(!(x_hops == 0 && y_hops == 0));
+
+    if (x_hops > 0) {
+        if (x_dirn) {
+            assert(inport_dirn == "Local" || inport_dirn == "West");
+            //std:: cout << "Going to East\n";
+            outport_dirn = "East";
+        } else {
+            assert(inport_dirn == "Local" || inport_dirn == "East");
+            //std:: cout << "Going to West\n";
+            outport_dirn = "West";
+        }
+    } else if (y_hops > 0) {
+        if (y_dirn) {
+            // "Local" or "South" or "West" or "East"
+            assert(inport_dirn != "North");
+            //std:: cout << "Going to North\n";
+            outport_dirn = "North";
+        } else {
+            // "Local" or "North" or "West" or "East"
+            assert(inport_dirn != "South");
+           // std:: cout << "Going to South\n";
             outport_dirn = "South";
         }
     } else {

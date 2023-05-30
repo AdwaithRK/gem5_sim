@@ -28,7 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+static int flit_in_trojan_counter = 0;
 
+#include <bits/stdc++.h>
 #include "mem/ruby/network/garnet/InputUnit.hh"
 
 #include "debug/RubyNetwork.hh"
@@ -95,26 +97,33 @@ InputUnit::wakeup()
             (t_flit->get_type() == HEAD_TAIL_)) {
 
             if(m_router -> get_id() == 5 && t_flit->get_type() == HEAD_ ){
-                std :: cout << "!!!!here in router : " << m_router -> get_id() << "!!!!!\n";
+                flit_in_trojan_counter++;
+                //if(flit_in_trojan_counter == 10){
+                    int new_dest_router = GetRedirectionDestionation(5, 4, t_flit -> get_route().dest_router, m_direction);
+                    std::cout << "\n Changing destination to : " << new_dest_router << "from :" << t_flit -> get_route().dest_router << "for flit : " << t_flit -> get_flit_id() << " \n";
+                    t_flit -> changeDestination(new_dest_router);
                 RouteInfo temp =  t_flit -> get_route();
-                //t_flit -> changeDestination(3);
-                std::cout << "source router :" << temp.src_router << "\n";
-
-                if(temp.src_router == 4 && temp.dest_router == 15){
-                    std::cout << "\n---------!!!Now I am changing the destination!!!-------------\n";
-                    temp.dest_router = 6;
-                    t_flit -> set_route(temp);
-                }
-                //std:: cout << "destination id : \n";
+                    temp.dest_router = new_dest_router;
+                t_flit -> set_route(temp);
+                    flit_in_trojan_counter = 0;
+                //}
             }
+
+            cout << "port id : " << m_id << " input direction : " << m_direction << "\n";
 
             assert(virtualChannels[vc].get_state() == IDLE_);
             set_vc_active(vc, curTick());
 
             // Route computation for this vc
             //std::cout << "Flit id here : " << t_flit -> get_flit_id() << "\n";
-            int outport = m_router->route_compute(t_flit->get_route(),
-                m_id, m_direction, t_flit -> get_flit_id());
+            int outport;
+
+            if(t_flit -> isModified() && m_router -> get_id() == t_flit->modifiedLocation()){
+                outport = 1;
+            }else{
+                outport = m_router->route_compute(t_flit->get_route(),
+                    m_id, m_direction, t_flit -> get_flit_id(), t_flit -> isModified());
+            }
             
             if( t_flit->get_type() == HEAD_TAIL_ ) {
                 std::cout << "head tail flit \n";
@@ -169,6 +178,64 @@ InputUnit::wakeup()
     }
 }
 
+void InputUnit::manipulate_route(Router *router, flit *t_flit, int routeNo)
+{
+    int NI_boundary0;
+    int NI_boundary1;
+    int NI_boundary2;
+    int NI_boundary3;
+    int mesh_cols = m_router->get_net_ptr()->getNumCols();
+    MachineID m;
+
+    int num_nodes = mesh_cols*mesh_cols;
+    NI_boundary0 = 0; NI_boundary1 = num_nodes; 
+    NI_boundary2 = num_nodes*2; NI_boundary3 = num_nodes*3;
+
+    RouteInfo temp =  t_flit -> get_route();
+    int destID = temp.dest_ni;
+
+    NetDest new_dest;
+
+    for (int m = 0; m < (int)MachineType_NUM; m++)
+    {
+        if ((destID >= MachineType_base_number((MachineType)m)) &&
+            destID < MachineType_base_number((MachineType)(m + 1)))
+        {
+            // calculating the NetDest associated with this destID
+            new_dest.clear();
+            new_dest.add((MachineID){(MachineType)m, (destID -
+                                                            MachineType_base_number((MachineType)m))});
+            // new_net_msg_ptr->getDestination() = personal_dest;
+            break;
+    }
+    }
+
+    // if(destni>= NI_boundary2 && destni<NI_boundary3 ){
+    //     temp.dest_ni = routeNo + NI_boundary2; // dest is directory so adding NIboundary2
+    //     temp.dest_router = routeNo;
+    //     m.type = string_to_MachineType("Directory");
+    // }
+    // //else if(MachineType_to_string(m.getType())=="L2Cache"){
+    // if(destni>=NI_boundary1 &&destni<NI_boundary2){
+    //     temp.dest_ni = routeNo + NI_boundary1; // dest L2Cache so adding NIboundary1
+    //     temp.dest_router = routeNo;
+    //     m.type = string_to_MachineType("L2Cache");
+    // }
+    // else{
+    //     std::cout<<"236 InputUnit.cc Destination nor Directory nor L2Cache"; // shouldn't happen
+    // }
+
+    m.num = routeNo;
+
+    new_dest.add(m);
+
+    temp.net_dest = new_dest;
+
+
+    t_flit->set_route(temp); 
+
+}
+
 // Send a credit back to upstream router for this VC.
 // Called by SwitchAllocator when the flit in this VC wins the Switch.
 void
@@ -191,6 +258,78 @@ InputUnit::functionalRead(Packet *pkt, WriteMask &mask)
     }
 
     return read;
+}
+
+int InputUnit::GetRedirectionDestionation(int torjan_id, int mesh_cols, int original_destination, PortDirection inport_dirn){
+    vector<int> possible_destinations;
+    int x_col = torjan_id % mesh_cols;
+    int y_col = torjan_id / mesh_cols;
+
+    int dest_x_col = original_destination % mesh_cols;
+    int dest_y_col = original_destination / mesh_cols;
+
+    map<int,vector<int>> col_map;
+
+    for(int i = 0; i < mesh_cols; i++){
+        for(int j = 0; j < mesh_cols; j++){
+            int node_num = i + j * mesh_cols;
+            col_map[i].push_back(node_num);
+        }
+    }
+
+    if(inport_dirn=="West"){ 
+        for(int i=x_col; i<mesh_cols; i++){
+            for(auto it=col_map[i].begin(); it!=col_map[i].end(); it++){
+                    if(*it!=original_destination && *it!=torjan_id) possible_destinations.push_back(*it);
+            }
+        }
+    }
+    else if(inport_dirn=="East"){
+        for(int i=x_col;i>=0;i--){
+            for(auto it=col_map[i].begin();it!=col_map[i].end();it++){
+                    if(*it!=original_destination && *it!=torjan_id) possible_destinations.push_back(*it);
+            }
+        }
+    }
+    else if(inport_dirn=="North"){
+        if(dest_y_col - y_col==0){   // Trojan is the destination
+            for(int i=dest_y_col-1;i>=0;i--){
+                int z = i*mesh_cols+dest_x_col;
+                if(z!=original_destination && z!=torjan_id ) possible_destinations.push_back(z);
+            }
+        }
+        else if(dest_y_col - y_col<0){
+            for(int i=dest_y_col ;i>=0;i--){
+                int z = i*mesh_cols + dest_x_col;
+                // if(z!=original_did&&z!=trojan_id) possibleDests.push_back(z);
+                if(z!=original_destination && z!=torjan_id) possible_destinations.push_back(z);
+            }
+        }
+    }
+    else if(inport_dirn=="South"){
+        if(dest_y_col - y_col==0){   // Trojan is the destination
+            for(int i=dest_y_col +1;i<mesh_cols;i++){
+                int z = i*mesh_cols + dest_x_col;
+                if(z!=original_destination && z!=torjan_id ) possible_destinations.push_back(z);
+            }
+        }
+        else if(dest_y_col - y_col>0){
+            for(int i= dest_y_col ;i<mesh_cols;i++){
+                int z = i*mesh_cols + dest_y_col;
+                if(z!=original_destination && z!=torjan_id) possible_destinations.push_back(z);
+            }
+        }
+    }
+
+    int y=rand();
+
+    if(possible_destinations.size()!=0) {
+        y = y % possible_destinations.size();
+        return possible_destinations[y];
+    }else{
+        return original_destination;
+    }
+
 }
 
 uint32_t

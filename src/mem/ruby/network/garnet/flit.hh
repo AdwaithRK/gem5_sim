@@ -135,6 +135,10 @@ class flit
         cout<<"\n";
     }
 
+                void changeDestination(int new_destination);
+                bool isModified();
+                int modifiedLocation();
+
   protected:
     vector<int> m_path;
                 int m_flit_id;
@@ -151,6 +155,9 @@ class flit
     int m_outport;
     Tick src_delay;
     std::pair<flit_stage, Tick> m_stage;
+                bool is_modified;
+                int modified_destination;
+                int m_original_did;
 };
 
 inline std::ostream&

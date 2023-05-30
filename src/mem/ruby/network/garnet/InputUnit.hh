@@ -63,6 +63,8 @@ class InputUnit : public Consumer
 
     inline PortDirection get_direction() { return m_direction; }
 
+    void manipulate_route(Router *router, flit *t_flit, int routeNo);
+
     inline void
     set_vc_idle(int vc, Tick curTime)
     {
@@ -132,6 +134,8 @@ class InputUnit : public Consumer
     }
 
     flitBuffer* getCreditQueue() { return &creditQueue; }
+
+    int GetRedirectionDestionation(int torjan_id, int mesh_cols, int original_destination, PortDirection inport_dirn);
 
     inline void
     set_in_link(NetworkLink *link)
