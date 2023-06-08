@@ -219,7 +219,7 @@ RoutingUnit::outportComputeXYModified(RouteInfo route,
 
     [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
     int num_cols = m_router->get_net_ptr()->getNumCols();
-    std :: cout << "\n\n\nNumber of columns : " << num_cols << "\n"; 
+    //std :: cout << "\n\n\nNumber of columns : " << num_cols << "\n"; 
     assert(num_rows > 0 && num_cols > 0);
 
     int my_id = m_router->get_id();

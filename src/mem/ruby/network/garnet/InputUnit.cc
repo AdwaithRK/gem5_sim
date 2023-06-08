@@ -97,19 +97,21 @@ InputUnit::wakeup()
             (t_flit->get_type() == HEAD_TAIL_)) {
 
             if(m_router -> get_id() == 5 && t_flit->get_type() == HEAD_ ){
-                flit_in_trojan_counter++;
-                //if(flit_in_trojan_counter == 10){
+                std::cout << "\n In router 5 \n";
+
+                if(shouldReroute()){
                     int new_dest_router = GetRedirectionDestionation(5, 4, t_flit -> get_route().dest_router, m_direction);
-                    std::cout << "\n Changing destination to : " << new_dest_router << "from :" << t_flit -> get_route().dest_router << "for flit : " << t_flit -> get_flit_id() << " \n";
+                    if(new_dest_router != t_flit -> get_route().dest_router) {
+                        std::cout << "\nChanging destination to : " << new_dest_router << " from : " << t_flit -> get_route().dest_router << " for flit : " << t_flit -> get_flit_id() << " for packet : " << t_flit -> get_id() << " \n";
                     t_flit -> changeDestination(new_dest_router);
                 RouteInfo temp =  t_flit -> get_route();
                     temp.dest_router = new_dest_router;
                 t_flit -> set_route(temp);
-                    flit_in_trojan_counter = 0;
-                //}
+                    }
+                }
             }
 
-            cout << "port id : " << m_id << " input direction : " << m_direction << "\n";
+           // cout << "port id : " << m_id << " input direction : " << m_direction << "\n";
 
             assert(virtualChannels[vc].get_state() == IDLE_);
             set_vc_active(vc, curTick());
@@ -117,23 +119,17 @@ InputUnit::wakeup()
             // Route computation for this vc
             //std::cout << "Flit id here : " << t_flit -> get_flit_id() << "\n";
             int outport;
-
+            //int original_router_id;
             if(t_flit -> isModified() && m_router -> get_id() == t_flit->modifiedLocation()){
+                int original_router_id = t_flit-> getOriginalLocation();
+                int packet_id = t_flit -> get_id();
+                std::cout << "\n Rerouted packet : " << packet_id << " reached : " << original_router_id << " from : " << m_router -> get_id() << " \n";
                 outport = 1;
             }else{
                 outport = m_router->route_compute(t_flit->get_route(),
                     m_id, m_direction, t_flit -> get_flit_id(), t_flit -> isModified());
             }
             
-            if( t_flit->get_type() == HEAD_TAIL_ ) {
-                std::cout << "head tail flit \n";
-
-            }
-
-
-            cout << "out port I got here = " << outport << "\n";
-            cout << "virtual channel : " << vc << "\n";
-
             // Update output port in VC
             // All flits in this packet will use this output port
             // The output port field in the flit is updated after it wins SA
@@ -178,63 +174,63 @@ InputUnit::wakeup()
     }
 }
 
-void InputUnit::manipulate_route(Router *router, flit *t_flit, int routeNo)
-{
-    int NI_boundary0;
-    int NI_boundary1;
-    int NI_boundary2;
-    int NI_boundary3;
-    int mesh_cols = m_router->get_net_ptr()->getNumCols();
-    MachineID m;
+// void InputUnit::manipulate_route(Router *router, flit *t_flit, int routeNo)
+// {
+//     int NI_boundary0;
+//     int NI_boundary1;
+//     int NI_boundary2;
+//     int NI_boundary3;
+//     int mesh_cols = m_router->get_net_ptr()->getNumCols();
+//     MachineID m;
 
-    int num_nodes = mesh_cols*mesh_cols;
-    NI_boundary0 = 0; NI_boundary1 = num_nodes; 
-    NI_boundary2 = num_nodes*2; NI_boundary3 = num_nodes*3;
+//     int num_nodes = mesh_cols*mesh_cols;
+//     NI_boundary0 = 0; NI_boundary1 = num_nodes; 
+//     NI_boundary2 = num_nodes*2; NI_boundary3 = num_nodes*3;
 
-    RouteInfo temp =  t_flit -> get_route();
-    int destID = temp.dest_ni;
+//     RouteInfo temp =  t_flit -> get_route();
+//     int destID = temp.dest_ni;
 
-    NetDest new_dest;
+//     NetDest new_dest;
 
-    for (int m = 0; m < (int)MachineType_NUM; m++)
-    {
-        if ((destID >= MachineType_base_number((MachineType)m)) &&
-            destID < MachineType_base_number((MachineType)(m + 1)))
-        {
-            // calculating the NetDest associated with this destID
-            new_dest.clear();
-            new_dest.add((MachineID){(MachineType)m, (destID -
-                                                            MachineType_base_number((MachineType)m))});
-            // new_net_msg_ptr->getDestination() = personal_dest;
-            break;
-    }
-    }
+//     for (int m = 0; m < (int)MachineType_NUM; m++)
+//     {
+//         if ((destID >= MachineType_base_number((MachineType)m)) &&
+//             destID < MachineType_base_number((MachineType)(m + 1)))
+//         {
+//             // calculating the NetDest associated with this destID
+//             new_dest.clear();
+//             new_dest.add((MachineID){(MachineType)m, (destID -
+//                                                             MachineType_base_number((MachineType)m))});
+//             // new_net_msg_ptr->getDestination() = personal_dest;
+//             break;
+//         }
+//     }
 
-    // if(destni>= NI_boundary2 && destni<NI_boundary3 ){
-    //     temp.dest_ni = routeNo + NI_boundary2; // dest is directory so adding NIboundary2
-    //     temp.dest_router = routeNo;
-    //     m.type = string_to_MachineType("Directory");
-    // }
-    // //else if(MachineType_to_string(m.getType())=="L2Cache"){
-    // if(destni>=NI_boundary1 &&destni<NI_boundary2){
-    //     temp.dest_ni = routeNo + NI_boundary1; // dest L2Cache so adding NIboundary1
-    //     temp.dest_router = routeNo;
-    //     m.type = string_to_MachineType("L2Cache");
-    // }
-    // else{
-    //     std::cout<<"236 InputUnit.cc Destination nor Directory nor L2Cache"; // shouldn't happen
-    // }
+//     // if(destni>= NI_boundary2 && destni<NI_boundary3 ){
+//     //     temp.dest_ni = routeNo + NI_boundary2; // dest is directory so adding NIboundary2
+//     //     temp.dest_router = routeNo;
+//     //     m.type = string_to_MachineType("Directory");
+//     // }
+//     // //else if(MachineType_to_string(m.getType())=="L2Cache"){
+//     // if(destni>=NI_boundary1 &&destni<NI_boundary2){
+//     //     temp.dest_ni = routeNo + NI_boundary1; // dest L2Cache so adding NIboundary1
+//     //     temp.dest_router = routeNo;
+//     //     m.type = string_to_MachineType("L2Cache");
+//     // }
+//     // else{
+//     //     std::cout<<"236 InputUnit.cc Destination nor Directory nor L2Cache"; // shouldn't happen
+//     // }
 
-    m.num = routeNo;
+//     m.num = routeNo;
 
-    new_dest.add(m);
+//     new_dest.add(m);
 
-    temp.net_dest = new_dest;
+//     temp.net_dest = new_dest;
 
 
-    t_flit->set_route(temp); 
+//     t_flit->set_route(temp); 
 
-}
+// }
 
 // Send a credit back to upstream router for this VC.
 // Called by SwitchAllocator when the flit in this VC wins the Switch.
@@ -330,6 +326,15 @@ int InputUnit::GetRedirectionDestionation(int torjan_id, int mesh_cols, int orig
         return original_destination;
     }
 
+}
+
+
+bool InputUnit::shouldReroute(){
+
+    int k = rand() % 100;
+
+    if( k >= 0 && k <= 30) return true;
+    return false;
 }
 
 uint32_t

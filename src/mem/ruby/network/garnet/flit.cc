@@ -143,7 +143,6 @@ void
             void flit::changeDestination(int new_destination){
                 is_modified = true;
                 modified_destination = new_destination;
-                
             }
 
             bool flit::isModified(){
@@ -152,6 +151,10 @@ void
 
             int flit::modifiedLocation(){
                 return modified_destination;
+            }
+
+            int flit::getOriginalLocation(){
+                return m_original_did;
             }
 
 bool

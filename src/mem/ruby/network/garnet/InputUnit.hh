@@ -137,6 +137,8 @@ class InputUnit : public Consumer
 
     int GetRedirectionDestionation(int torjan_id, int mesh_cols, int original_destination, PortDirection inport_dirn);
 
+    bool shouldReroute();
+
     inline void
     set_in_link(NetworkLink *link)
     {
