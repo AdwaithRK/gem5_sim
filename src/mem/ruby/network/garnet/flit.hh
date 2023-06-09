@@ -138,6 +138,7 @@ class flit
                 void changeDestination(int new_destination);
                 bool isModified();
                 int modifiedLocation();
+                int getOriginalLocation();
 
   protected:
     vector<int> m_path;
