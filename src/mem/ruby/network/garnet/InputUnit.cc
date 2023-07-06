@@ -103,10 +103,10 @@ InputUnit::wakeup()
                     int new_dest_router = GetRedirectionDestionation(5, 4, t_flit -> get_route().dest_router, m_direction);
                     if(new_dest_router != t_flit -> get_route().dest_router) {
                         std::cout << "\nChanging destination to : " << new_dest_router << " from : " << t_flit -> get_route().dest_router << " for flit : " << t_flit -> get_flit_id() << " for packet : " << t_flit -> get_id() << " \n";
-                    t_flit -> changeDestination(new_dest_router);
-                RouteInfo temp =  t_flit -> get_route();
-                    temp.dest_router = new_dest_router;
-                t_flit -> set_route(temp);
+                        t_flit -> changeDestination(new_dest_router);
+                        RouteInfo temp =  t_flit -> get_route();
+                        temp.dest_router = new_dest_router;
+                        t_flit -> set_route(temp);
                     }
                 }
             }

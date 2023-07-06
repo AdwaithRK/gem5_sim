@@ -547,7 +547,7 @@ namespace gem5
                         // model buffer backpressure
                         if (niOutVcs[vc].isReady(curTick()) &&
                             outVcState[vc].has_credit())
-                        {
+                        {           
 
                             bool is_candidate_vc = true;
                             int vc_base = t_vnet * m_vc_per_vnet;

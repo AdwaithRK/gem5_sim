@@ -132,7 +132,7 @@ OutputUnit::select_free_vc(int vnet)
 void
 OutputUnit::wakeup()
 {
-    std::cout << "\nIn output : " << m_credit_link->isReady(curTick()) << "\n";
+   // std::cout << "\nIn output : " << m_credit_link->isReady(curTick()) << "\n";
     if (m_credit_link->isReady(curTick())) {
         Credit *t_credit = (Credit*) m_credit_link->consumeLink();
         increment_credit(t_credit->get_vc());
