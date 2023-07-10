@@ -65,6 +65,7 @@ from common import MemConfig
 from common.FileSystemConfig import config_filesystem
 from common.Caches import *
 from common.cpu2000 import *
+from common.cpu2017 import *
 
 
 def get_processes(args):
@@ -139,7 +140,7 @@ if args.bench:
 
     for app in apps:
         try:
-            if get_runtime_isa() == ISA.ARM:
+            if get_runtime_isa() == ISA.X86:
                 exec(
                     "workload = %s('arm_%s', 'linux', '%s')"
                     % (app, args.arm_iset, args.spec_input)
