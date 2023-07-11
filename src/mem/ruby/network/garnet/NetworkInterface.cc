@@ -198,9 +198,13 @@ namespace gem5
             NetworkInterface::wakeup()
             {
                 std::ostringstream oss;
+
+                int routerID;
+
                 for (auto &oPort : outPorts)
                 {
                     oss << oPort->routerID() << "[" << oPort->printVnets() << "] ";
+                    routerID = oPort -> routerID();
                 }
                 DPRINTF(RubyNetwork, "Network Interface %d connected to router:%s "
                                      "woke up. Period: %ld\n",
@@ -255,8 +259,28 @@ namespace gem5
                         int vnet = t_flit->get_vnet();
                         t_flit->set_dequeue_time(curTick());
 
-                        if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
-                            t_flit->print_path();
+                        // if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
+                        //     t_flit->print_path();
+
+                        MsgPtr temp = t_flit -> get_msg_ptr();
+
+                        if(temp -> getRedirectedFlagValue()){
+                             //if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_){
+                                if(t_flit->get_type() == TAIL_) cout << "\n Tail!!! \n";
+                                if(t_flit->get_type() == HEAD_) cout << "\n Head!!! \n";
+                                std::cout << "Dropping packet : " << t_flit -> getPacketID() << " at the NIC in " << routerID << "\n\n";
+                                // printing packet only for tail flit
+                            // }
+                            
+
+                            continue;
+
+                        } 
+
+                        if(temp -> getRedirectedFlagValue())
+                            cout << "blah\n";
+
+                        
 
                         // If a tail flit is received, enqueue into the protocol buffers
                         // if space is available. Otherwise, exchange non-tail flits for
@@ -264,6 +288,7 @@ namespace gem5
                         if (t_flit->get_type() == TAIL_ ||
                             t_flit->get_type() == HEAD_TAIL_)
                         {
+                            std::cout << "Tail packet : " << t_flit -> getPacketID() << " at the NIC in " << routerID << "\n\n";
                             if (!iPort->messageEnqueuedThisCycle &&
                                 outNode_ptr[vnet]->areNSlotsAvailable(1, curTime))
                             {
@@ -489,8 +514,8 @@ namespace gem5
                                             m_net_ptr->MessageSizeType_to_int(
                                                 net_msg_ptr->getMessageSize()),
                                             oPort->bitWidth(), curTick(), true);
-                        fl->print(std::cout);
-                        std::cout << "\n";
+                        // fl->print(std::cout);
+                        //std::cout << "\n";
 
                         fl->set_src_delay(curTick() - msg_ptr->getTime());
                         niOutVcs[vc].insert(fl);

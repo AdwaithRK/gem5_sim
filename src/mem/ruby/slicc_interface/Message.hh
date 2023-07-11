@@ -65,7 +65,7 @@ class Message
     Message(Tick curTime)
         : m_time(curTime),
           m_LastEnqueueTime(curTime),
-          m_DelayedTicks(0), m_msg_counter(0)
+          m_DelayedTicks(0), m_msg_counter(0), isRedirected(false)
     { }
 
     Message(const Message &other) = default;
@@ -121,6 +121,16 @@ class Message
     int getVnet() const { return vnet; }
     void setVnet(int net) { vnet = net; }
 
+    bool setRedirected(){
+      isRedirected = true;
+      return isRedirected;
+    }
+
+    bool getRedirectedFlagValue(){
+      return isRedirected;
+    }
+    
+
   private:
     Tick m_time;
     Tick m_LastEnqueueTime; // my last enqueue time
@@ -130,6 +140,7 @@ class Message
     // Variables for required network traversal
     int incoming_link;
     int vnet;
+    bool isRedirected;
 };
 
 inline bool

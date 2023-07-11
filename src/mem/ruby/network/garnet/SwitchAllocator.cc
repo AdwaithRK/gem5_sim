@@ -202,19 +202,6 @@ SwitchAllocator::arbitrate_outports()
                         m_router->curCycle());
 
 
-                printf( "SwitchAllocator at Router %d "
-                                     "granted outvc %d at outport %d "
-                                     "to invc %d at inport %d to flit %d at "
-                                     "cycle: %lld\n",
-                        m_router->get_id(), outvc,
-                        m_router->getPortDirectionName(
-                            output_unit->get_direction()),
-                        invc,
-                        m_router->getPortDirectionName(
-                            input_unit->get_direction()),
-                            t_flit -> get_flit_id(),
-                        m_router->curCycle());
-
 
                 // Update outport field in the flit since this is
                 // used by CrossbarSwitch code to send it out of

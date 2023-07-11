@@ -225,7 +225,7 @@ RoutingUnit::outportComputeXYModified(RouteInfo route,
     int my_id = m_router->get_id();
 
 
-    cout << "Router id : " << my_id << "\n";
+    cout << "\nRouter id : " << my_id << "\n";
     cout << "flit_id : " << flit_id << "\n";
     cout << "Input port direction: " << inport_dirn << "\n";
     int my_x = my_id % num_cols;
@@ -258,23 +258,23 @@ RoutingUnit::outportComputeXYModified(RouteInfo route,
     if (x_hops > 0) {
         if (x_dirn) {
             //assert(inport_dirn == "Local" || inport_dirn == "West");
-            std:: cout << "Going to East\n";
+           // std:: cout << "Going to East\n";
             outport_dirn = "East";
         } else {
             // assert(inport_dirn == "Local" || inport_dirn == "East");
-            std:: cout << "Going to West\n";
+            //std:: cout << "Going to West\n";
             outport_dirn = "West";
         }
     } else if (y_hops > 0) {
         if (y_dirn) {
             // "Local" or "South" or "West" or "East"
             //assert(inport_dirn != "North");
-            std:: cout << "Going to North\n";
+            //std:: cout << "Going to North\n";
             outport_dirn = "North";
         } else {
             // "Local" or "North" or "West" or "East"
             //assert(inport_dirn != "South");
-            std:: cout << "Going to South\n";
+            //std:: cout << "Going to South\n";
             outport_dirn = "South";
         }
     } else {
@@ -302,7 +302,7 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 
     [[maybe_unused]] int num_rows = m_router->get_net_ptr()->getNumRows();
     int num_cols = m_router->get_net_ptr()->getNumCols();
-    std :: cout << "\n\n\nNumber of columns : " << num_cols << "\n"; 
+    // std :: cout << "\n\n\nNumber of columns : " << num_cols << "\n"; 
     assert(num_rows > 0 && num_cols > 0);
 
     int my_id = m_router->get_id();
