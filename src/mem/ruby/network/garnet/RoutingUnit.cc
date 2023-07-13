@@ -176,8 +176,10 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
         // Multiple NIs may be connected to this router,
         // all with output port direction = "Local"
         // Get exact outport id from table
-        outport = lookupRoutingTable(route.vnet, route.net_dest);
-        return outport;
+        //outport = lookupRoutingTable(route.vnet, route.net_dest);
+        //return outport;
+        return 1;
+    
     }
 
     // Routing Algorithm set in GarnetNetwork.py

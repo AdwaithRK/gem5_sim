@@ -33,6 +33,11 @@
 
 #include <cassert>
 #include <cmath>
+#include <bits/stdc++.h>
+
+using namespace std;
+
+static std::unordered_map<int, std::vector<int>> pending_acknowledgement; // NI id : [packet_id]
 
 #include "base/cast.hh"
 #include "debug/RubyNetwork.hh"
@@ -223,6 +228,7 @@ namespace gem5
                     if (b->isReady(curTime))
                     { // Is there a message waiting
                         msg_ptr = b->peekMsgPtr();
+
                         if (flitisizeMessage(msg_ptr, vnet))
                         {
                             b->dequeue(curTime);
@@ -236,7 +242,7 @@ namespace gem5
                 // message is enqueued to restrict ejection to one message per cycle.
                 checkStallQueue();
 
-                DPRINTF(AdwaithTest, "ADWAITH!!!!!", 0);
+                // DPRINTF(AdwaithTest, "ADWAITH!!!!!", 0);
 
                 /*********** Check the incoming flit link **********/
                 DPRINTF(RubyNetwork, "Number of input ports: %d\n", inPorts.size());
@@ -255,7 +261,29 @@ namespace gem5
                         // If a tail flit is received, enqueue into the protocol buffers
                         // if space is available. Otherwise, exchange non-tail flits for
                         // credits.
-                        if (t_flit->get_type() == TAIL_ ||
+                        if(t_flit -> is_acknowledgement()){
+                            t_flit -> print(std::cout);
+                            int corresponding_packet_id = t_flit -> get_acknowledgement_packet_id();
+
+                                cout << "\n Got acknowledgement for packet : " << corresponding_packet_id << " at NIC : " << m_id << "\n\n";
+
+                                for(auto k : pending_acknowledgement[m_id]){
+                                    cout << k << "\n";
+                                }
+
+                            //if(find(pending_acknowledgement[m_id].begin(), pending_acknowledgement[m_id].end(), corresponding_packet_id) != pending_acknowledgement[m_id].end()){
+                                cout << "deleting from pending list\n\n";
+                                remove(pending_acknowledgement[m_id].begin(), pending_acknowledgement[m_id].end(), corresponding_packet_id);
+                            //}
+                                Credit *cFlit = new Credit(t_flit->get_vc(),
+                                                           true, curTick());
+                                iPort->sendCredit(cFlit);
+                                // Update stats and delete flit pointer
+                                incrementStats(t_flit);
+                                delete t_flit;
+                        }
+                        
+                        else if (t_flit->get_type() == TAIL_ ||
                             t_flit->get_type() == HEAD_TAIL_)
                         {
                             if (!iPort->messageEnqueuedThisCycle &&
@@ -264,6 +292,8 @@ namespace gem5
                                 // Space is available. Enqueue to protocol buffer.
                                 outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
                                                            cyclesToTicks(Cycles(1)));
+
+                                sendAcknowlegement(msg_ptr, t_flit, curTime);
 
                                 // Simply send a credit back since we are not buffering
                                 // this flit in the NI
@@ -486,12 +516,80 @@ namespace gem5
 
                         fl->set_src_delay(curTick() - msg_ptr->getTime());
                         niOutVcs[vc].insert(fl);
+
+                        if (fl->get_type() == TAIL_ ||
+                            fl->get_type() == HEAD_TAIL_){
+
+                            cout << "pushing into pending acknowledgement at NIC : " << m_id << " packet id : " << packet_id << "\n"; 
+                            
+                            pending_acknowledgement[m_id].push_back(packet_id);
+                        }
+
                     }
 
                     m_ni_out_vcs_enqueue_time[vc] = curTick();
                     outVcState[vc].setState(ACTIVE_, curTick());
                 }
                 return true;
+            }
+
+            void NetworkInterface::sendAcknowlegement(MsgPtr msg_ptr, flit *t_flit, Tick curTime)
+            {
+
+                cout << "\n Original flit : ";
+                t_flit -> print(std::cout);
+
+                int ackVnet = 0;
+                int vc = calculateVC(ackVnet);
+
+                // choose a vc from the next control vnet if
+                // currently no value has been given.
+                if (vc == -1)
+                {
+                    ackVnet = 1;
+                    vc = calculateVC(ackVnet);
+                }
+
+                OutputPort *oPort = getOutportForVnet(ackVnet);
+
+                MsgPtr new_msg_ptr = t_flit->get_msg_ptr();
+
+                RouteInfo rt_info = t_flit->get_route();
+
+                RouteInfo route;
+                route.vnet = ackVnet; // ? just check?
+                route.src_ni = m_id;
+                route.src_router = rt_info.dest_router;
+                route.dest_ni = rt_info.src_ni;
+                route.dest_router = rt_info.src_router;
+
+                // initialize hops_traversed to -1
+                // so that the first router increments it to 0
+                route.hops_traversed = -1;
+
+                // new_msg_ptr.get()->getDestination().
+
+                flit *fl = new flit(
+                    m_net_ptr->getNextPacketID(),
+                    0, vc, ackVnet, route, 1, new_msg_ptr,
+                    m_net_ptr->get_m_control_msg_size(), oPort->bitWidth(),
+                    curTime);
+
+                fl->set_is_acknowledgement();
+                fl->set_acknowledgement_packet_id(t_flit->getPacketID());
+
+                // fl->set_is_nack(true);
+                // fl->correspondingPacketID = t_flit->getPacketID();
+
+                niOutVcs[vc].insert(fl);
+
+                // std::cout << "Acknowledgement send via flit \n";
+                // fl->print(std::cout);
+
+                // m_net_ptr->increment_nacks_injected();
+
+                // code for the receiving end
+                incrementStats(t_flit);
             }
 
             // Looking for a free output vc

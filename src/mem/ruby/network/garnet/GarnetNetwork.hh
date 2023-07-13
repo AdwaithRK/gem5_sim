@@ -157,6 +157,8 @@ class GarnetNetwork : public Network
     void update_traffic_distribution(RouteInfo route);
     int getNextPacketID() { return m_next_packet_id++; }
 
+    int get_m_control_msg_size() {return m_control_msg_size; }
+
   protected:
     // Configuration
     int m_num_rows;

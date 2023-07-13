@@ -79,6 +79,22 @@ class flit
     void set_dequeue_time(Tick time) { m_dequeue_time = time; }
     void set_enqueue_time(Tick time) { m_enqueue_time = time; }
 
+    void set_acknowledgement_packet_id(int packet_id){
+        m_acknowledgement_packet_id = packet_id;
+    }
+
+    void set_is_acknowledgement(){
+        is_acknowledgement_packet = true;
+    }
+
+    bool is_acknowledgement(){
+        return is_acknowledgement_packet;
+    }
+
+    int get_acknowledgement_packet_id(){
+        return m_acknowledgement_packet_id;
+    }
+
     void increment_hops() { m_route.hops_traversed++; }
     virtual void print(std::ostream& out) const;
 
@@ -129,6 +145,8 @@ class flit
     int m_outport;
     Tick src_delay;
     std::pair<flit_stage, Tick> m_stage;
+    int m_acknowledgement_packet_id;
+    bool is_acknowledgement_packet;
 };
 
 inline std::ostream&

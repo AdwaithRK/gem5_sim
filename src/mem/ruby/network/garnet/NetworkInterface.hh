@@ -70,6 +70,8 @@ class NetworkInterface : public ClockedObject, public Consumer
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
         SwitchID router_id, uint32_t consumerVcs);
 
+    void sendAcknowlegement(MsgPtr msg_ptr, flit *t_flit, Tick curTime);
+
     void dequeueCallback();
     void wakeup();
     void addNode(std::vector<MessageBuffer *> &inNode,
