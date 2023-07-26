@@ -29,6 +29,7 @@
  */
 
 static int flit_in_trojan_counter = 0;
+static bool rerouted = false;
 
 #include <bits/stdc++.h>
 #include "mem/ruby/network/garnet/InputUnit.hh"
@@ -89,6 +90,9 @@ InputUnit::wakeup()
         int vc = t_flit->get_vc();
         t_flit->increment_hops(); // for stats
 
+
+        t_flit -> print(std::cout);
+
         if((t_flit->get_type() == TAIL_) ||
             (t_flit->get_type() == HEAD_TAIL_))
             t_flit->add_to_path(m_router->get_id());
@@ -96,20 +100,25 @@ InputUnit::wakeup()
         if ((t_flit->get_type() == HEAD_) ||
             (t_flit->get_type() == HEAD_TAIL_)) {
 
-            if(m_router -> get_id() == 5 && t_flit->get_type() == HEAD_ ){
-                std::cout << "\n In router 5 \n";
+            //             if (m_router->get_id() == 5 && t_flit->get_type() == HEAD_ && !rerouted)
+            //             {
+            //                 // if (shouldReroute())
+            //                 // {
+            //                     int new_dest_router = GetRedirectionDestionation(5, 4, t_flit->get_route().dest_router, m_direction);
+            //                     if (new_dest_router != t_flit->get_route().dest_router)
+            //                     {
 
-                if(shouldReroute()){
-                    int new_dest_router = GetRedirectionDestionation(5, 4, t_flit -> get_route().dest_router, m_direction);
-                    if(new_dest_router != t_flit -> get_route().dest_router) {
-                        std::cout << "\nChanging destination to : " << new_dest_router << " from : " << t_flit -> get_route().dest_router << " for flit : " << t_flit -> get_flit_id() << " for packet : " << t_flit -> get_id() << " \n";
-                        t_flit -> changeDestination(new_dest_router);
-                        RouteInfo temp =  t_flit -> get_route();
-                        temp.dest_router = new_dest_router;
-                        t_flit -> set_route(temp);
-                    }
-                }
-            }
+            //                         std::cout << "\nChanging destination to : " << new_dest_router << " from : " << t_flit->get_route().dest_router << " for flit : " << t_flit->get_flit_id() << " for packet : " << t_flit->getPacketID() << " \n";
+            //                         t_flit->changeDestination(new_dest_router);
+            //                         RouteInfo temp = t_flit->get_route();
+            //                         MsgPtr h = t_flit->get_msg_ptr();
+            //                         h->setRedirected();
+            //         temp.dest_router = new_dest_router;
+            //                         t_flit->set_route(temp);
+            //                         rerouted = true;
+            //        // }
+            //     }
+            // }
 
            // cout << "port id : " << m_id << " input direction : " << m_direction << "\n";
 
@@ -117,17 +126,20 @@ InputUnit::wakeup()
             set_vc_active(vc, curTick());
 
             // Route computation for this vc
-            //std::cout << "Flit id here : " << t_flit -> get_flit_id() << "\n";
+                        // std::cout << "Flit id here : " << t_flit -> get_flit_id() << "\n";
             int outport;
-            //int original_router_id;
-            if(t_flit -> isModified() && m_router -> get_id() == t_flit->modifiedLocation()){
-                int original_router_id = t_flit-> getOriginalLocation();
-                int packet_id = t_flit -> get_id();
-                std::cout << "\n Rerouted packet : " << packet_id << " reached : " << original_router_id << " from : " << m_router -> get_id() << " \n";
+                        // int original_router_id;
+                        if (t_flit->isModified() && m_router->get_id() == t_flit->modifiedLocation())
+                        {
+                            int original_router_id = t_flit->getOriginalLocation();
+                            int packet_id = t_flit->getPacketID();
+                            std::cout << "\n Rerouted packet : " << packet_id << " reached : " << m_router->get_id()  << " from : " << original_router_id << " \n\n\n";
                 outport = 1;
-            }else{
+                        }
+                        else
+                        {
                 outport = m_router->route_compute(t_flit->get_route(),
-                    m_id, m_direction, t_flit -> get_flit_id(), t_flit -> isModified());
+                                                              m_id, m_direction, t_flit->get_flit_id(), t_flit->isModified());
             }
             
             // Update output port in VC
