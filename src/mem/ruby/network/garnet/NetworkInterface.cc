@@ -40,8 +40,16 @@
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include <queue>
 
+struct PacketBufferEntry
+{
+    gem5::ruby::MsgPtr msg_ptr;
+    int vnet;
+    gem5::Tick received_time;
+};
 
+static map<int, queue<PacketBufferEntry>> PacketBuffer;
 
 namespace gem5
 {
@@ -206,7 +214,7 @@ namespace gem5
                 for (auto &oPort : outPorts)
                 {
                     oss << oPort->routerID() << "[" << oPort->printVnets() << "] ";
-                    routerID = oPort -> routerID();
+                    routerID = oPort->routerID();
                 }
                 DPRINTF(RubyNetwork, "Network Interface %d connected to router:%s "
                                      "woke up. Period: %ld\n",
@@ -264,7 +272,7 @@ namespace gem5
                         // if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
                         //     t_flit->print_path();
 
-                        MsgPtr temp = t_flit -> get_msg_ptr();
+                        MsgPtr temp = t_flit->get_msg_ptr();
 
                         // if(temp -> getRedirectedFlagValue()){
                         //      //if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_){
@@ -275,16 +283,13 @@ namespace gem5
                         //         cout << "\n\n\n";
                         //         // printing packet only for tail flit
                         //     // }
-                            
 
                         //     continue;
 
-                        // } 
+                        // }
 
-                        if(temp -> getRedirectedFlagValue())
+                        if (temp->getRedirectedFlagValue())
                             cout << "blah\n";
-
-                        
 
                         // If a tail flit is received, enqueue into the protocol buffers
                         // if space is available. Otherwise, exchange non-tail flits for
@@ -292,14 +297,20 @@ namespace gem5
                         if (t_flit->get_type() == TAIL_ ||
                             t_flit->get_type() == HEAD_TAIL_)
                         {
-                            MsgPtr temp = t_flit -> get_msg_ptr();
-                           if(temp -> getRedirectedFlagValue()  ){
-                                std::cout << "Tail packet : " << t_flit -> getPacketID() << " at the NIC in " << routerID << "\n\n";
+                            MsgPtr temp = t_flit->get_msg_ptr();
+
+                            if (temp->getRedirectedFlagValue())
+                            {
+
+                                PacketBufferEntry tempPacketBuffer = {t_flit->get_msg_ptr(), t_flit->get_vnet(), curTick()};
+                                int srcni = t_flit->get_route().src_ni;
+                                PacketBuffer[srcni].push(tempPacketBuffer);
+                                std::cout << "Tail packet : " << t_flit->getPacketID() << " at the NIC in " << routerID << "\n\n";
                                 delete t_flit;
-                           }
-                            
-                           else if (!iPort->messageEnqueuedThisCycle &&
-                                outNode_ptr[vnet]->areNSlotsAvailable(1, curTime))
+                            }
+
+                            else if (!iPort->messageEnqueuedThisCycle &&
+                                     outNode_ptr[vnet]->areNSlotsAvailable(1, curTime))
                             {
                                 // Space is available. Enqueue to protocol buffer.
                                 outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
@@ -359,6 +370,23 @@ namespace gem5
                         }
                         delete t_credit;
                     }
+                }
+
+                if (!PacketBuffer[m_id].empty())
+                {
+
+                    // if (PacketBuffer[m_id].front().received_time <= curTick())
+                    // {
+                        PacketBuffer[m_id].front().msg_ptr->resetRedirected();
+                        if (flitisizeMessage(PacketBuffer[m_id].front().msg_ptr, PacketBuffer[m_id].front().vnet))
+                        {
+                            PacketBuffer[m_id].pop();
+                        }
+                    // }
+                    // else
+                    // {
+                    //     PacketBuffer[m_id].pop();
+                    // }
                 }
 
                 // It is possible to enqueue multiple outgoing credit flits if a message
@@ -524,7 +552,7 @@ namespace gem5
                                                 net_msg_ptr->getMessageSize()),
                                             oPort->bitWidth(), curTick(), true);
                         // fl->print(std::cout);
-                        //std::cout << "\n";
+                        // std::cout << "\n";
 
                         fl->set_src_delay(curTick() - msg_ptr->getTime());
                         niOutVcs[vc].insert(fl);

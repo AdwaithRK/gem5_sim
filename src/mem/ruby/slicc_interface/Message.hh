@@ -126,6 +126,11 @@ class Message
       return isRedirected;
     }
 
+    bool resetRedirected(){
+      isRedirected = false;
+      return isRedirected;
+    }
+
     bool getRedirectedFlagValue(){
       return isRedirected;
     }
