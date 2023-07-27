@@ -122,6 +122,7 @@ void
             flit::print(std::ostream &out) const
 {
                 out << "\n\n[flit:: ";
+                out << "Message Point ID=" << m_msg_ptr->getMsgCounter() << " ";
                 out << "Flit_ID=" << m_flit_id << " ";
     out << "PacketId=" << m_packet_id << " ";
     out << "Id=" << m_id << " ";

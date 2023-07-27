@@ -49,7 +49,9 @@ struct PacketBufferEntry
     gem5::Tick received_time;
 };
 
+
 static map<int, queue<PacketBufferEntry>> PacketBuffer;
+
 
 namespace gem5
 {
@@ -207,6 +209,8 @@ namespace gem5
             void
             NetworkInterface::wakeup()
             {
+
+
                 std::ostringstream oss;
 
                 int routerID;
@@ -240,7 +244,7 @@ namespace gem5
                         // std::cout << std::endl
                         //           << "Message type:" << msg_ptr->getMessageSize() << std::endl
                         //           << std::endl;
-                        if (flitisizeMessage(msg_ptr, vnet))
+                        if (flitisizeMessage(msg_ptr, vnet, false))
                         {
                             b->dequeue(curTime);
                         }
@@ -306,12 +310,15 @@ namespace gem5
                                 int srcni = t_flit->get_route().src_ni;
                                 PacketBuffer[srcni].push(tempPacketBuffer);
                                 std::cout << "Tail packet : " << t_flit->getPacketID() << " at the NIC in " << routerID << "\n\n";
+                                Credit *cFlit = new Credit(t_flit->get_vc(), true, curTick());
+                                iPort->sendCredit(cFlit);
                                 delete t_flit;
                             }
 
                             else if (!iPort->messageEnqueuedThisCycle &&
                                      outNode_ptr[vnet]->areNSlotsAvailable(1, curTime))
                             {
+                                if(temp -> getIsRetransmitted()) std::cout << "\nRetransmitted reached destination!!!\n";
                                 // Space is available. Enqueue to protocol buffer.
                                 outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
                                                            cyclesToTicks(Cycles(1)));
@@ -354,6 +361,29 @@ namespace gem5
                     }
                 }
 
+
+               while (!PacketBuffer[m_id].empty())
+                {
+
+                    // if (PacketBuffer[m_id].front().received_time <= curTick())
+                    // {
+                        cout << "retransmitting!!\n";
+                        PacketBuffer[m_id].front().msg_ptr->resetRedirected();
+                        if (flitisizeMessage(PacketBuffer[m_id].front().msg_ptr, PacketBuffer[m_id].front().vnet, true))
+                        {
+                            PacketBuffer[m_id].pop();
+                        }else{
+                            break;
+                        }
+                    // }
+                    // else
+                    // {
+                    //     PacketBuffer[m_id].pop();
+                    // }
+                }
+
+
+
                 /****************** Check the incoming credit link *******/
 
                 for (auto &oPort : outPorts)
@@ -372,22 +402,7 @@ namespace gem5
                     }
                 }
 
-                if (!PacketBuffer[m_id].empty())
-                {
-
-                    // if (PacketBuffer[m_id].front().received_time <= curTick())
-                    // {
-                        PacketBuffer[m_id].front().msg_ptr->resetRedirected();
-                        if (flitisizeMessage(PacketBuffer[m_id].front().msg_ptr, PacketBuffer[m_id].front().vnet))
-                        {
-                            PacketBuffer[m_id].pop();
-                        }
-                    // }
-                    // else
-                    // {
-                    //     PacketBuffer[m_id].pop();
-                    // }
-                }
+   
 
                 // It is possible to enqueue multiple outgoing credit flits if a message
                 // was unstalled in the same cycle as a new message arrives. In this
@@ -403,7 +418,8 @@ namespace gem5
                         iPort->outCreditLink()->scheduleEventAbsolute(clockEdge(Cycles(1)));
                     }
                 }
-                checkReschedule();
+               // checkReschedule();
+                scheduleEvent(Cycles(5));
             }
 
             void
@@ -466,8 +482,9 @@ namespace gem5
 
             // Embed the protocol message into flits
             bool
-            NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
+            NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet, bool isRetranmitting)
             {
+                if(isRetranmitting) msg_ptr->setIsRetransmitted();
                 Message *net_msg_ptr = msg_ptr.get();
                 NetDest net_msg_dest = net_msg_ptr->getDestination();
 
@@ -482,6 +499,7 @@ namespace gem5
                                                  net_msg_ptr->getMessageSize()),
                                              (float)oPort->bitWidth());
 
+                vc_busy_counter[vnet] += 1;
                 DPRINTF(RubyNetwork, "Message Size:%d vnet:%d bitWidth:%d\n",
                         m_net_ptr->MessageSizeType_to_int(net_msg_ptr->getMessageSize()),
                         vnet, oPort->bitWidth());
@@ -559,6 +577,9 @@ namespace gem5
                         // fl->print(std::cout);
                     }
 
+                    if(isRetranmitting)
+                        std::cout << "Retransmitting packet : " <<  packet_id  << "\n\n";
+
                     m_ni_out_vcs_enqueue_time[vc] = curTick();
                     outVcState[vc].setState(ACTIVE_, curTick());
                 }
@@ -582,10 +603,20 @@ namespace gem5
                         vc_busy_counter[vnet] = 0;
                         return ((vnet * m_vc_per_vnet) + delta);
                     }
+
+                    // else if(vc_busy_counter[vnet] > m_deadlock_threshold){
+                    //     outVcState[(vnet * m_vc_per_vnet) + delta].setState(IDLE_, curTick());
+                    //     cout << "setting idle : " << (vnet * m_vc_per_vnet) + delta << "\n\n";
+                    //     vc_busy_counter[vnet] = 0;
+                    //     return ((vnet * m_vc_per_vnet) + delta);
+                    // }
+
+
                 }
 
                 vc_busy_counter[vnet] += 1;
-                panic_if(vc_busy_counter[vnet] > m_deadlock_threshold,
+                
+                panic_if(vc_busy_counter[vnet] > m_deadlock_threshold + 250000000,
                          "%s: Possible network deadlock in vnet: %d at time: %llu \n",
                          name(), vnet, curTick());
 

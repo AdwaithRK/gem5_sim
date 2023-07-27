@@ -294,7 +294,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     std::vector<int> vc_busy_counter;
 
     void checkStallQueue();
-    bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
+    bool flitisizeMessage(MsgPtr msg_ptr, int vnet, bool isRetranmitting);
     int calculateVC(int vnet);
 
 
