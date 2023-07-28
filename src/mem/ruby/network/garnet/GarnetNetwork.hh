@@ -157,6 +157,12 @@ class GarnetNetwork : public Network
     void update_traffic_distribution(RouteInfo route);
     int getNextPacketID() { return m_next_packet_id++; }
 
+
+    // -----------------------functions for trojan stats ------------------------------------
+    
+    void increment_total_L1_requests(){ m_total_L1_requests++;}
+    void increment_total_L1_requests_through_trojan(){ m_total_L1_requests_through_trojan++;} 
+
   protected:
     // Configuration
     int m_num_rows;
@@ -202,6 +208,11 @@ class GarnetNetwork : public Network
 
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
+
+    // ----------------- new stats variable for torjan ------------------------------
+
+    statistics::Scalar m_total_L1_requests;
+    statistics::Scalar m_total_L1_requests_through_trojan;
 
   private:
     GarnetNetwork(const GarnetNetwork& obj);

@@ -65,7 +65,7 @@ class Message
     Message(Tick curTime)
         : m_time(curTime),
           m_LastEnqueueTime(curTime),
-          m_DelayedTicks(0), m_msg_counter(0), isRedirected(false)
+          m_DelayedTicks(0), m_msg_counter(0), isRedirected(false), onceRedirected(false), isRetransmitted(false)
     { }
 
     Message(const Message &other) = default;
@@ -134,6 +134,24 @@ class Message
     bool getRedirectedFlagValue(){
       return isRedirected;
     }
+
+    bool setOnceRedirected(){
+      onceRedirected = true;
+      return onceRedirected;
+    }
+
+    bool getOnceRedirected(){
+      return onceRedirected;
+    }
+
+    bool setIsRetransmitted(){
+      isRetransmitted = true;
+      return isRetransmitted;
+    }
+
+    bool getIsRetransmitted(){
+      return isRetransmitted;
+    }
     
 
   private:
@@ -146,6 +164,8 @@ class Message
     int incoming_link;
     int vnet;
     bool isRedirected;
+    bool onceRedirected;
+    bool isRetransmitted;
 };
 
 inline bool

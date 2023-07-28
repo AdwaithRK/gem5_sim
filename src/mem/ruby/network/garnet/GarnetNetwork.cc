@@ -528,6 +528,14 @@ GarnetNetwork::regStats()
             statistics::oneline)
         ;
 
+    // Stats
+
+    m_total_L1_requests
+        .name(name()+".s1_total_L1_requests");
+
+    m_total_L1_requests_through_trojan
+        .name(name()+".s2_total_L1_requests_through_trojan");
+
     // Traffic distribution
     for (int source = 0; source < m_routers.size(); ++source) {
         m_data_traffic_distribution.push_back(

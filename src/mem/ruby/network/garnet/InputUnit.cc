@@ -38,6 +38,11 @@ static bool redirection = false;
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 
+int NI_boundary0;
+int NI_boundary1;
+int NI_boundary2;
+int NI_boundary3;
+
 namespace gem5
 {
 
@@ -54,6 +59,15 @@ InputUnit::InputUnit(int id, PortDirection direction, Router *router)
     const int m_num_vcs = m_router->get_num_vcs();
     m_num_buffer_reads.resize(m_num_vcs/m_vc_per_vnet);
     m_num_buffer_writes.resize(m_num_vcs/m_vc_per_vnet);
+
+    int mesh_cols = m_router->get_net_ptr()->getNumCols();
+
+    int num_nodes = mesh_cols*mesh_cols;
+    NI_boundary0 = 0; 
+    NI_boundary1 = num_nodes; 
+    NI_boundary2 = num_nodes*2; 
+    NI_boundary3 = num_nodes*3;
+
     for (int i = 0; i < m_num_buffer_reads.size(); i++) {
         m_num_buffer_reads[i] = 0;
         m_num_buffer_writes[i] = 0;
@@ -100,28 +114,56 @@ InputUnit::wakeup()
         if ((t_flit->get_type() == HEAD_) ||
             (t_flit->get_type() == HEAD_TAIL_)) {
 
-                        if (m_router->get_id() == 500 && t_flit->get_type() == HEAD_TAIL_)
-                        {
-                            MsgPtr temp = t_flit->get_msg_ptr();
+            RouteInfo t_route = t_flit->get_route();
+            int src_rtr = t_route.src_router; int dest_rtr = t_route.dest_router;
+            int src_ni = t_route.src_ni; int dest_ni = t_route.dest_ni;
+            int my_id = m_router->get_id();
 
-                            if (shouldReroute())
-                            {
-                                int new_dest_router = GetRedirectionDestionation(5, 4, t_flit->get_route().dest_router, m_direction);
-                                cout << "above redirected flag value : " << temp->getRedirectedFlagValue() << "\n\n";
-                                if (new_dest_router != t_flit->get_route().dest_router && !temp -> getOnceRedirected() )
-                                {
+            // Total L1 requests
+            if(
+                my_id ==src_rtr &&
+                t_flit->get_vnet()==0 &&
+                src_ni >=NI_boundary0 && src_ni <NI_boundary1 && dest_ni >= NI_boundary1 && dest_ni < NI_boundary2
+              )
+            {
+                m_router->get_net_ptr()->increment_total_L1_requests();
+               // m_router->get_net_ptr()->increment_L1requests_sent_by(src_rtr);
+            }
 
-                                    std::cout << "\nChanging destination to : " << new_dest_router << " from : " << t_flit->get_route().dest_router << " for flit : " << t_flit->get_flit_id() << " for packet : " << t_flit->getPacketID() << " \n";
-                                    t_flit->changeDestination(new_dest_router);
-                                    RouteInfo temp = t_flit->get_route();
-                                    MsgPtr h = t_flit->get_msg_ptr();
-                                    cout << "redirected flag value : " <<  h->setRedirected() << "\n\n";
-                                    temp.dest_router = new_dest_router;
-                                    h -> setOnceRedirected();
-                                    t_flit->set_route(temp);
-                                }
-                            }
-                        }
+            // Total L1 requests through Trojan
+            if(
+                my_id == 5 && my_id != src_rtr && my_id != dest_rtr &&
+                t_flit->get_vnet()==0 &&
+                src_ni >=NI_boundary0 && src_ni <NI_boundary1 && dest_ni >= NI_boundary1 && dest_ni < NI_boundary2
+              )
+            {
+                m_router->get_net_ptr()->increment_total_L1_requests_through_trojan();
+            }
+
+
+
+            if (m_router->get_id() == 5 && t_flit->get_type() == HEAD_TAIL_)
+            {
+                MsgPtr temp = t_flit->get_msg_ptr();
+
+                if (shouldReroute())
+                {
+                    int new_dest_router = GetRedirectionDestionation(5, 4, t_flit->get_route().dest_router, m_direction);
+                    cout << "above redirected flag value : " << temp->getRedirectedFlagValue() << "\n\n";
+                    if (new_dest_router != t_flit->get_route().dest_router && !temp -> getOnceRedirected() )
+                    {
+
+                        std::cout << "\nChanging destination to : " << new_dest_router << " from : " << t_flit->get_route().dest_router << " for flit : " << t_flit->get_flit_id() << " for packet : " << t_flit->getPacketID() << " \n";
+                        t_flit->changeDestination(new_dest_router);
+                        RouteInfo temp = t_flit->get_route();
+                        MsgPtr h = t_flit->get_msg_ptr();
+                        cout << "redirected flag value : " <<  h->setRedirected() << "\n\n";
+                        temp.dest_router = new_dest_router;
+                        h -> setOnceRedirected();
+                        t_flit->set_route(temp);
+                    }
+                }
+            }
 
            // cout << "port id : " << m_id << " input direction : " << m_direction << "\n";
 
