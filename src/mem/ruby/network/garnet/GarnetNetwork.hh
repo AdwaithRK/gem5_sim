@@ -162,6 +162,9 @@ class GarnetNetwork : public Network
     
     void increment_total_L1_requests(){ m_total_L1_requests++;}
     void increment_total_L1_requests_through_trojan(){ m_total_L1_requests_through_trojan++;} 
+    void increment_packets_rerouted(){ m_packets_rerouted++;}
+    
+
 
   protected:
     // Configuration
@@ -213,6 +216,8 @@ class GarnetNetwork : public Network
 
     statistics::Scalar m_total_L1_requests;
     statistics::Scalar m_total_L1_requests_through_trojan;
+    Stats::Scalar m_packets_rerouted;
+
 
   private:
     GarnetNetwork(const GarnetNetwork& obj);

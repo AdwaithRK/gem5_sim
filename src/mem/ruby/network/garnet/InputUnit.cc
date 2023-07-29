@@ -60,13 +60,7 @@ InputUnit::InputUnit(int id, PortDirection direction, Router *router)
     m_num_buffer_reads.resize(m_num_vcs/m_vc_per_vnet);
     m_num_buffer_writes.resize(m_num_vcs/m_vc_per_vnet);
 
-    int mesh_cols = m_router->get_net_ptr()->getNumCols();
 
-    int num_nodes = mesh_cols*mesh_cols;
-    NI_boundary0 = 0; 
-    NI_boundary1 = num_nodes; 
-    NI_boundary2 = num_nodes*2; 
-    NI_boundary3 = num_nodes*3;
 
     for (int i = 0; i < m_num_buffer_reads.size(); i++) {
         m_num_buffer_reads[i] = 0;
@@ -94,6 +88,18 @@ void
 InputUnit::wakeup()
 {
     flit *t_flit;
+
+    int mesh_cols = m_router->get_net_ptr()->getNumCols();
+
+    int num_nodes = mesh_cols*mesh_cols;
+    NI_boundary0 = 0; 
+    NI_boundary1 = num_nodes; 
+    NI_boundary2 = num_nodes*2; 
+    NI_boundary3 = num_nodes*3;
+
+
+
+
     if (m_in_link->isReady(curTick())) {
 
         t_flit = m_in_link->consumeLink();
@@ -127,18 +133,8 @@ InputUnit::wakeup()
               )
             {
                 m_router->get_net_ptr()->increment_total_L1_requests();
-               // m_router->get_net_ptr()->increment_L1requests_sent_by(src_rtr);
             }
 
-            // Total L1 requests through Trojan
-            if(
-                my_id == 5 && my_id != src_rtr && my_id != dest_rtr &&
-                t_flit->get_vnet()==0 &&
-                src_ni >=NI_boundary0 && src_ni <NI_boundary1 && dest_ni >= NI_boundary1 && dest_ni < NI_boundary2
-              )
-            {
-                m_router->get_net_ptr()->increment_total_L1_requests_through_trojan();
-            }
 
 
 
@@ -146,10 +142,19 @@ InputUnit::wakeup()
             {
                 MsgPtr temp = t_flit->get_msg_ptr();
 
+
+
                 if (shouldReroute())
                 {
                     int new_dest_router = GetRedirectionDestionation(5, 4, t_flit->get_route().dest_router, m_direction);
                     cout << "above redirected flag value : " << temp->getRedirectedFlagValue() << "\n\n";
+                    // Total L1 requests through Trojan
+                    if(
+                        src_ni >=NI_boundary0 && src_ni <NI_boundary1 && dest_ni >= NI_boundary1 && dest_ni < NI_boundary2
+                    )
+                    {
+                        m_router->get_net_ptr()->increment_total_L1_requests_through_trojan();
+                    }
                     if (new_dest_router != t_flit->get_route().dest_router && !temp -> getOnceRedirected() )
                     {
 
@@ -166,11 +171,6 @@ InputUnit::wakeup()
             }
 
            // cout << "port id : " << m_id << " input direction : " << m_direction << "\n";
-
-            if(virtualChannels[vc].get_state() != IDLE_){
-                virtualChannels[vc].set_state(IDLE_, curTick());
-                cout << "Panicing at VC : " << vc << "\n";
-            }
 
             assert(virtualChannels[vc].get_state() == IDLE_);
 

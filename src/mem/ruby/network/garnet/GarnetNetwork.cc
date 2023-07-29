@@ -535,6 +535,9 @@ GarnetNetwork::regStats()
 
     m_total_L1_requests_through_trojan
         .name(name()+".s2_total_L1_requests_through_trojan");
+    
+    m_packets_rerouted
+        .name(name()+".s4_packets_rerouted");
 
     // Traffic distribution
     for (int source = 0; source < m_routers.size(); ++source) {
