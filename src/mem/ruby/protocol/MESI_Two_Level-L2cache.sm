@@ -148,13 +148,15 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
     NetDest L1_GetS_IDs,            desc="Set of the internal processors that want the block in shared state";
     MachineID L1_GetX_ID,          desc="ID of the L1 cache to forward the block to once we get a response";
+    Tick entry_time;
+    Tick exit_time;
     int pendingAcks,            desc="number of pending acks for invalidates during writeback";
   }
 
   structure(TBETable, external="yes") {
     TBE lookup(Addr);
     void allocate(Addr);
-    void deallocate(Addr);
+    void deallocate(Addr, int);
     bool isPresent(Addr);
   }
 
@@ -618,7 +620,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate external TBE") {
-    TBEs.deallocate(address);
+    TBEs.deallocate(address, 0);
     unset_tbe();
   }
 

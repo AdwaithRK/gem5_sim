@@ -155,13 +155,15 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     DataBlock DataBlk,                desc="Buffer for the data block";
     bool Dirty, default="false",   desc="data is dirty";
     bool isPrefetch,       desc="Set if this was caused by a prefetch";
+    Tick entry_time;
+    Tick exit_time;
     int pendingAcks, default="0", desc="number of pending acks";
   }
 
   structure(TBETable, external="yes") {
     TBE lookup(Addr);
     void allocate(Addr);
-    void deallocate(Addr);
+    void deallocate(Addr, int);
     bool isPresent(Addr);
   }
 
@@ -900,7 +902,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
-    TBEs.deallocate(address);
+    TBEs.deallocate(address, 1);
+    
     unset_tbe();
   }
 

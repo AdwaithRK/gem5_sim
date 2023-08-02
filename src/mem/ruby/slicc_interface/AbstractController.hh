@@ -340,8 +340,8 @@ class AbstractController : public ClockedObject, public Consumer
     bool serviceMemoryQueue();
 
 
-    Stats::Scalar m_avg_miss_penalty;
-    Stats::Scalar m_total_TBEentries;
+    statistics::Scalar m_avg_miss_penalty;
+    statistics::Scalar m_total_TBEentries;
 
   protected:
     const NodeID m_version;

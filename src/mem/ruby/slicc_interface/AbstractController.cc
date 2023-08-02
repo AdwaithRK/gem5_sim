@@ -130,11 +130,6 @@ AbstractController::regStats()
 {
     ClockedObject::regStats();
 
-    // m_fully_busy_cycles
-    //     .name(name() + ".fully_busy_cycles")
-    //     .desc("cycles for which number of transistions == max transitions")
-    //     .flags(Stats::nozero);
-
     m_avg_miss_penalty
         .name(name() + ".avg_miss_penalty")
         //.desc("Avg miss penalty, i.e. avg time for entries to wait in TBE")
@@ -142,7 +137,6 @@ AbstractController::regStats()
 
     m_total_TBEentries
         .name(name()+".total_TBEentries");
-}
 }
 
 void

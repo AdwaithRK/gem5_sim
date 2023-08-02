@@ -84,13 +84,15 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     State TBEState,        desc="Transient State";
     DataBlock DataBlk,     desc="Data to be written (DMA write only)";
     int Len,               desc="...";
+    Tick entry_time;
+    Tick exit_time;
     MachineID Requestor,   desc="The DMA engine that sent the request";
   }
 
   structure(TBETable, external="yes") {
     TBE lookup(Addr);
     void allocate(Addr);
-    void deallocate(Addr);
+    void deallocate(Addr, int);
     bool isPresent(Addr);
     bool functionalRead(Packet *pkt);
     int functionalWrite(Packet *pkt);
@@ -445,7 +447,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
-    TBEs.deallocate(address);
+    TBEs.deallocate(address, 0);
     unset_tbe();
   }
 

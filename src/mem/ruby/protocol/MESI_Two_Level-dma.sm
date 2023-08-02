@@ -52,13 +52,15 @@ machine(MachineType:DMA, "DMA Controller")
 
   structure(TBE, desc="...") {
     State TBEState,    desc="Transient state";
+    Tick entry_time;
+    Tick exit_time;
     DataBlock DataBlk, desc="Data";
   }
 
   structure(TBETable, external = "yes") {
     TBE lookup(Addr);
     void allocate(Addr);
-    void deallocate(Addr);
+    void deallocate(Addr, int);
     bool isPresent(Addr);
   }
 
@@ -181,7 +183,7 @@ machine(MachineType:DMA, "DMA Controller")
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
-    TBEs.deallocate(address);
+    TBEs.deallocate(address, 0);
     unset_tbe();
   }
 
