@@ -471,6 +471,11 @@ class Commit
         /** Stat for the total number of times commit has had to stall due
          * to a non-speculative instruction reaching the head of the ROB.
          */
+
+        statistics::Scalar lastCommitedTime;
+
+
+
         statistics::Scalar commitNonSpecStalls;
         /** Stat for the total number of branch mispredicts that caused a
          * squash.

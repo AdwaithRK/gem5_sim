@@ -149,6 +149,8 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
     : statistics::Group(cpu, "commit"),
       ADD_STAT(commitSquashedInsts, statistics::units::Count::get(),
                "The number of squashed insts skipped by commit"),
+      ADD_STAT(lastCommitedTime, statistics::units::Tick::get(),
+               "last commited time in ROB"),
       ADD_STAT(commitNonSpecStalls, statistics::units::Count::get(),
                "The number of times commit has been forced to stall to "
                "communicate backwards"),
@@ -1122,6 +1124,11 @@ Commit::commitInsts()
                 if (!interrupt && avoidQuiesceLiveLock &&
                     onInstBoundary && cpu->checkInterrupts(0))
                     squashAfter(tid, head_inst);
+
+                stats.lastCommitedTime = curTick();
+
+                //std::cout << "current time of ROB update : " << currTimeROB << "\n";
+                
             } else {
                 DPRINTF(Commit, "Unable to commit head instruction PC:%s "
                         "[tid:%i] [sn:%llu].\n",
@@ -1129,6 +1136,7 @@ Commit::commitInsts()
                 break;
             }
         }
+
     }
 
     DPRINTF(CommitRate, "%i\n", num_committed);
