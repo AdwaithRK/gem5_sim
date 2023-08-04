@@ -167,9 +167,17 @@ RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 
 int
 RoutingUnit::outportCompute(RouteInfo route, int inport,
-                            PortDirection inport_dirn, int flit_id, bool is_modified)
+                            PortDirection inport_dirn, int flit_id, bool is_modified, bool is_retranmitted)
 {
     int outport = -1;
+
+
+    if(is_retranmitted){
+        outport = outportComputeDXY(route, inport, inport_dirn, flit_id);
+        return outport;
+    }
+
+
 
     if(is_modified){
         std::cout << "\nhere in modified routing algorithm\n";
@@ -285,6 +293,195 @@ RoutingUnit::outportComputeXYModified(RouteInfo route,
     }
 
     return m_outports_dirn2idx[outport_dirn];
+}
+
+int
+RoutingUnit:: outportComputeDXY(RouteInfo route,
+                              int inport,
+                              PortDirection inport_dirn, int flit_id)
+{
+    PortDirection outport_dirn = "Unknown";
+    
+
+    int num_rows = m_router->get_net_ptr()->getNumRows();
+    int num_cols = m_router->get_net_ptr()->getNumCols();
+    assert(num_rows > 0 && num_cols > 0);
+
+    int my_id = m_router->get_id();
+    int my_x = my_id % num_cols;
+    int my_y = my_id / num_cols;
+
+    int dest_id = route.dest_router;
+    int dest_x = dest_id % num_cols;
+    int dest_y = dest_id / num_cols;
+
+    int x_hops = (dest_x - my_x);
+    int y_hops = (dest_y - my_y);
+
+    long double mx;
+    vector<int> vect;
+    int l, r, t, b;
+    int sta=2;
+    
+       
+    // already checked that in outportCompute() function
+    assert(!(x_hops == 0 && y_hops == 0));
+
+    int src_id = route.src_router;
+    int src_x = src_id % num_cols;
+    int src_y = src_id / num_cols;
+
+    // 0 -> west
+    // 1 -> east
+    // 2 -> north
+    // 3 -> south
+
+    if(x_hops == 0 || y_hops == 0)
+    {
+        if(x_hops == 0){
+            
+            if(y_hops > 0){
+                outport_dirn = "North";
+                
+                // return 2;
+                }
+            else if(y_hops < 0){
+                outport_dirn = "South";
+               
+                // return 3;
+                }
+            }
+        else if(y_hops == 0){
+            
+            if(x_hops > 0){
+                outport_dirn = "East";
+                //return 1;
+            }
+            else if(x_hops < 0){
+                outport_dirn = "West";
+
+            }
+        }
+    }
+    else
+    { //NSS
+
+        if(x_hops > 0)   
+        
+        { //syam
+
+
+            if(y_hops > 0)
+                {
+               
+                    
+                        vect.push_back(0);
+                        vect.push_back(1);
+            
+            
+                        int randompos= rand()%vect.size();
+
+            
+                        if(randompos==0)
+                            outport_dirn = "North";
+            
+                        else 
+                            outport_dirn = "East";
+           
+                        vect.clear();
+
+                }      
+                
+            
+            else if(y_hops < 0)
+                {
+                
+                    
+                        vect.push_back(0);
+                        vect.push_back(1);
+           
+
+            
+                        int randompos= rand()%vect.size();
+
+            
+            
+                        if(randompos==0)
+                            outport_dirn = "South";
+                        else 
+                            outport_dirn = "East";
+
+
+                        vect.clear();
+
+                }
+
+                    
+        }//syam
+        
+        else if(x_hops < 0)
+
+        { //sankar
+
+            if(y_hops > 0)
+                    {
+                
+                    
+
+                  
+
+
+                        vect.push_back(0);
+                        vect.push_back(1);
+           
+
+            
+                        int randompos= rand()%vect.size();
+
+            
+            
+                        if(randompos==0)
+                            outport_dirn = "North";
+                        else 
+                            outport_dirn = "West";
+
+
+                        vect.clear();
+                    }
+                    
+              
+            
+            else if(y_hops < 0)
+                    {
+                
+                    
+                    
+                        vect.push_back(0);
+                        vect.push_back(1);
+           
+
+            
+                        int randompos= rand()%vect.size();
+
+            
+            
+                        if(randompos==0)
+                            outport_dirn = "West";
+                        else 
+                            outport_dirn = "South";
+
+
+                        vect.clear();
+                    }
+                    
+                    
+        }//sankar
+
+
+    }//NSS
+    return m_outports_dirn2idx[outport_dirn];
+    
+
 }
 
 

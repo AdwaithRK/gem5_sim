@@ -46,7 +46,7 @@ namespace garnet
 
 // Constructor for the flit
             flit::flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
-                    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime, bool increment)
+                    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime, bool increment, bool isRetranmitted)
 {
                 if (increment)
                     m_flit_id = ++flit_counter;
@@ -79,11 +79,13 @@ namespace garnet
         m_type = TAIL_;
     else
         m_type = BODY_;
+
+    m_is_retransmitted = isRetranmitted;
 }
 
             flit::flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
                     MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
-                    : flit(packet_id, id, vc, vnet, route, size, msg_ptr, MsgSize, bWidth, curTime, false) {}
+                    : flit(packet_id, id, vc, vnet, route, size, msg_ptr, MsgSize, bWidth, curTime, false, false) {}
 
 flit *
 flit::serialize(int ser_id, int parts, uint32_t bWidth)

@@ -159,9 +159,9 @@ Router::getInportDirection(int inport)
 }
 
 int
-Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id, bool isModified)
+Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id, bool isModified, bool isRetransmitted)
 {
-    return routingUnit.outportCompute(route, inport, inport_dirn, flit_id, isModified);
+    return routingUnit.outportCompute(route, inport, inport_dirn, flit_id, isModified, isRetransmitted);
 }
 
 void

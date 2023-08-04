@@ -165,6 +165,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     void allocate(Addr);
     void deallocate(Addr, int);
     bool isPresent(Addr);
+    Tick get_avg_misspenalty();
   }
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
@@ -903,7 +904,6 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
     TBEs.deallocate(address, 1);
-    
     unset_tbe();
   }
 

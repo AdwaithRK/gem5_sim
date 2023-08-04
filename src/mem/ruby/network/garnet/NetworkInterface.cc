@@ -568,7 +568,7 @@ namespace gem5
                                             i, vc, vnet, route, num_flits, new_msg_ptr,
                                             m_net_ptr->MessageSizeType_to_int(
                                                 net_msg_ptr->getMessageSize()),
-                                            oPort->bitWidth(), curTick(), true);
+                                            oPort->bitWidth(), curTick(), true, isRetranmitting);
                         // fl->print(std::cout);
                         // std::cout << "\n";
 

@@ -54,7 +54,7 @@ class flit
   public:
     flit() {}
     flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
-         MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime, bool increment);
+         MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime, bool increment, bool isRetransmitted);
 
     flit(int packet_id, int id, int vc, int vnet, RouteInfo route, int size,
          MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime);
@@ -75,6 +75,8 @@ class flit
     flit_type get_type() { return m_type; }
     std::pair<flit_stage, Tick> get_stage() { return m_stage; }
     Tick get_src_delay() { return src_delay; }
+
+    bool get_retransmitted_value() { return m_is_retransmitted; }
 
     void set_outport(int port) { m_outport = port; }
     void set_time(Tick time) { m_time = time; }
@@ -152,6 +154,7 @@ class flit
     Tick m_enqueue_time, m_dequeue_time;
     Tick m_time;
     flit_type m_type;
+    bool m_is_retransmitted;
     MsgPtr m_msg_ptr;
     int m_outport;
     Tick src_delay;

@@ -133,7 +133,7 @@ InputUnit::wakeup()
               )
             {
                 m_router->get_net_ptr()->increment_total_L1_requests();
-            }
+            }           
 
 
 
@@ -185,13 +185,13 @@ InputUnit::wakeup()
                             int original_router_id = t_flit->getOriginalLocation();
                             int packet_id = t_flit->getPacketID();
                             std::cout << "\n Rerouted packet : " << packet_id << " reached : " << m_router->get_id()  << " from : " << original_router_id << " \n\n\n";
-                outport = 1;
+                            outport = 1;
                         }
                         else
                         {
-                outport = m_router->route_compute(t_flit->get_route(),
-                                                              m_id, m_direction, t_flit->get_flit_id(), t_flit->isModified());
-            }
+                            outport = m_router->route_compute(t_flit->get_route(),
+                                                              m_id, m_direction, t_flit->get_flit_id(), t_flit->isModified(), t_flit -> get_retransmitted_value());
+                        }
             
             // Update output port in VC
             // All flits in this packet will use this output port
