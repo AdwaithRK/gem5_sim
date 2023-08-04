@@ -173,6 +173,15 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
 
 
     if(is_retranmitted){
+
+        if (route.dest_router == m_router->get_id()) {
+            // Multiple NIs may be connected to this router,
+            // all with output port direction = "Local"
+            // Get exact outport id from table
+            outport = lookupRoutingTable(route.vnet, route.net_dest);
+            return outport;
+        }
+
         outport = outportComputeDXY(route, inport, inport_dirn, flit_id);
         return outport;
     }
