@@ -164,10 +164,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     TBE lookup(Addr);
     void allocate(Addr);
     void deallocate(Addr, int);
+    Tick get_avg_misspenalty();
     bool isPresent(Addr);
   }
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
+  //AbstractController adwaith;
 
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
@@ -903,7 +905,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
     TBEs.deallocate(address, 1);
-    
+    //m_avg_miss_penalty := TBEs.get_avg_misspenalty();
+   // m_setAverageMissPenality();
     unset_tbe();
   }
 
