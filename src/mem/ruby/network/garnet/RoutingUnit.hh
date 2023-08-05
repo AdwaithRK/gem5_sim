@@ -77,6 +77,8 @@ class RoutingUnit
 
     int outportComputeDXY(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id);
 
+    int outportComputeYX(RouteInfo route,int inport, PortDirection inport_dirn, int flit_id);
+
 
     // Custom Routing Algorithm using Port Directions
     int outportComputeCustom(RouteInfo route,
