@@ -137,8 +137,8 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
     fatal_if(!seWorkload, "Couldn't find appropriate workload object.");
     fatal_if(_pid >= System::maxPID, "_pid is too large: %d", _pid);
 
-    auto ret_pair = system->PIDs.emplace(_pid);
-    fatal_if(!ret_pair.second, "_pid %d is already used", _pid);
+    // auto ret_pair = system->PIDs.emplace(_pid);
+    // fatal_if(!ret_pair.second, "_pid %d is already used", _pid);
 
     /**
      * Linux bundles together processes into this concept called a thread
