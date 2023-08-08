@@ -127,6 +127,12 @@ class flit
 
     void add_to_path(int x) {m_path.push_back(x);}
 
+    void add_to_direction(string dir) {m_path_direction.push_back(dir);}
+
+    vector<int> get_path() { return m_path; }
+
+    vector<string> get_direction() { return m_path_direction; }
+
     void print_path(){
         cout<<"Flit ID = "<<m_flit_id<<" ; Src = "<<m_route.src_router <<" ; Dest = "<< m_route.dest_router<< " ; Path = ";
         int n = m_path.size();
@@ -144,7 +150,8 @@ class flit
 
   protected:
     vector<int> m_path;
-                int m_flit_id;
+    vector<string> m_path_direction;
+    int m_flit_id;
     int m_packet_id;
     int m_id;
     int m_vnet;

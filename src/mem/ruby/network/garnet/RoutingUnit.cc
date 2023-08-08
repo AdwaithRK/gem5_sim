@@ -37,6 +37,9 @@
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+static vector<vector<int>> m_trust_states;
+
+
 namespace gem5
 {
 
@@ -51,6 +54,65 @@ RoutingUnit::RoutingUnit(Router *router)
     m_router = router;
     m_routing_table.clear();
     m_weight_table.clear();
+
+     m_trust_states.resize(16, std::vector<int>(4, 0));
+    
+}
+
+int RoutingUnit::directionToIndex(std::string direction){
+    if(direction == "North") return 0;
+    if(direction == "East") return 1;
+    if(direction == "South") return 2;
+    if(direction == "West") return 3;
+
+    return -1;
+}
+
+
+
+void RoutingUnit::decrementTrust(std::vector<int> indexes, std::vector<string> directions){ // higher value means lower trust
+    std::cout << "here in decrement trust\n";
+    for(int i = 0; i < indexes.size(); i++){
+        // if(m_trust_states.find(indexes[i]) == m_trust_states.end()) m_trust_states[indexes[i]] = 0;
+        int dir = directionToIndex(directions[i]);
+        if(dir == -1) return;
+        // std::cout << "indexes : " << indexes[i] << "direction : "
+
+        std::cout << "row size : " << m_trust_states.size() << "col : " << m_trust_states[indexes[i]].size() << "\n";
+        std::cout << "bow bow\n";
+       if(m_trust_states[indexes[i]][dir] != 3) m_trust_states[indexes[i]][dir]++;
+    }
+}
+
+
+void RoutingUnit::incrementTrust(std::vector<int> indexes, std::vector<string> directions){ // lower value means higher trust
+    std::cout << "here in increment trust\n";
+    std::cout << "indexes : " ;
+    for(int i = 0; i < indexes.size(); i++){
+        std::cout << indexes[i] << "\t";
+    }
+
+
+    std::cout << "directions :";
+
+    for(int i = 0; i < directions.size(); i++){
+        std::cout << "\n" << directions[i] << "\t";
+    }
+
+    
+    for(int i = 0; i < indexes.size(); i++){
+        //if(m_trust_states.find(indexes[i]) == m_trust_states.end()) m_trust_states[indexes[i]] = new map<int, int>();
+        int dir = directionToIndex(directions[i]);
+        if(dir == -1) return;
+        std::cout << "dir here : " << dir << "\n";
+        std::cout << "row size : " << m_trust_states.size() << " col : " << m_trust_states[indexes[i]].size() << "\n";
+        std::cout << "bow bow\n";
+        std::cout << "hey hey : " << indexes[i] << " direction index : " << dir << "\n";
+
+        if(m_trust_states[indexes[i]][dir] != 0) m_trust_states[indexes[i]][dir]--;
+
+        std::cout << "blah blah !!!!\n";
+    }
 }
 
 void
@@ -167,12 +229,17 @@ RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
 
 int
 RoutingUnit::outportCompute(RouteInfo route, int inport,
-                            PortDirection inport_dirn, int flit_id, bool is_modified, bool is_retranmitted)
+                            PortDirection inport_dirn, int flit_id, bool is_modified, bool is_retranmitted, flit* t_flit)
 {
     int outport = -1;
 
 
-    if(is_retranmitted){
+
+   // std::cout << "\n here in outport compute : " << is_retranmitted <<"\n";
+    
+
+//    if(is_retranmitted){
+//         std::cout << "using YX path!!!";
 
         if (route.dest_router == m_router->get_id()) {
             // Multiple NIs may be connected to this router,
@@ -182,49 +249,49 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
             return outport;
         }
 
-        outport = outportComputeYX(route, inport, inport_dirn, flit_id);
+        outport = outportComputeDXY(route, inport, inport_dirn, flit_id, t_flit);
         return outport;
-    }
+    // // }
 
 
 
-    if(is_modified){
-        std::cout << "\nhere in modified routing algorithm\n";
-        outport = outportComputeXYModified(route, inport, inport_dirn, flit_id);
+    // if(is_modified){
+    //     std::cout << "\nhere in modified routing algorithm\n";
+    //     outport = outportComputeXYModified(route, inport, inport_dirn, flit_id);
 
-        return outport;
-    }
+    //     return outport;
+    // }
 
 
 
-    if (route.dest_router == m_router->get_id()) {
+    // if (route.dest_router == m_router->get_id()) {
 
-        // Multiple NIs may be connected to this router,
-        // all with output port direction = "Local"
-        // Get exact outport id from table
-        outport = lookupRoutingTable(route.vnet, route.net_dest);
-        return outport;
-    }
+    //     // Multiple NIs may be connected to this router,
+    //     // all with output port direction = "Local"
+    //     // Get exact outport id from table
+    //     outport = lookupRoutingTable(route.vnet, route.net_dest);
+    //     return outport;
+    // }
 
-    // Routing Algorithm set in GarnetNetwork.py
-    // Can be over-ridden from command line using --routing-algorithm = 1
-    RoutingAlgorithm routing_algorithm =
-        (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
+    // // Routing Algorithm set in GarnetNetwork.py
+    // // Can be over-ridden from command line using --routing-algorithm = 1
+    // RoutingAlgorithm routing_algorithm =
+    //     (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
 
-    switch (routing_algorithm) {
-        case TABLE_:  outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-        case XY_:     outport =
-            outportComputeXY(route, inport, inport_dirn, flit_id); break;
-        // any custom algorithm
-        case CUSTOM_: outport =
-            outportComputeCustom(route, inport, inport_dirn); break;
-        default: outport =
-            lookupRoutingTable(route.vnet, route.net_dest); break;
-    }
+    // switch (routing_algorithm) {
+    //     case TABLE_:  outport =
+    //         lookupRoutingTable(route.vnet, route.net_dest); break;
+    //     case XY_:     outport =
+    //         outportComputeXY(route, inport, inport_dirn, flit_id); break;
+    //     // any custom algorithm
+    //     case CUSTOM_: outport =
+    //         outportComputeCustom(route, inport, inport_dirn); break;
+    //     default: outport =
+    //         lookupRoutingTable(route.vnet, route.net_dest); break;
+    // }
 
-    assert(outport != -1);
-    return outport;
+    // assert(outport != -1);
+    // return outport;
 }
 
 int
@@ -304,10 +371,32 @@ RoutingUnit::outportComputeXYModified(RouteInfo route,
     return m_outports_dirn2idx[outport_dirn];
 }
 
+
+int RoutingUnit::getRoutingUnitNumber(int router_no, PortDirection outport_dirn, int num_cols){
+    if(outport_dirn == "North"){
+        return router_no + num_cols; 
+    }
+
+    if(outport_dirn == "East"){
+        return router_no + 1;
+    }
+
+    if(outport_dirn == "South"){
+        return router_no - num_cols;
+    }
+
+    if(outport_dirn == "West"){
+        return router_no - 1;
+    }
+
+    return -1;
+
+}
+
 int
 RoutingUnit:: outportComputeDXY(RouteInfo route,
                               int inport,
-                              PortDirection inport_dirn, int flit_id)
+                              PortDirection inport_dirn, int flit_id, flit* t_flit)
 {
     PortDirection outport_dirn = "Unknown";
     
@@ -375,6 +464,8 @@ RoutingUnit:: outportComputeDXY(RouteInfo route,
     else
     { //NSS
 
+        std::cout << "\nHere comparing directions !!!!\n";
+
         if(x_hops > 0)          
         { //syam
 
@@ -383,20 +474,27 @@ RoutingUnit:: outportComputeDXY(RouteInfo route,
                 {
                
                     
-                        vect.push_back(0);
-                        vect.push_back(1);
-            
-            
-                        int randompos= rand()%vect.size();
+                        // vect.push_back(0);
+                        // vect.push_back(1);
 
+                        int north_router = getRoutingUnitNumber(my_id, "North", num_cols);
+                        int east_router = getRoutingUnitNumber(my_id, "East", num_cols);
+
+
+                        // if(direction == "North") return 0;
+                        // if(direction == "East") return 1;
+                        // if(direction == "South") return 2;
+                        // if(direction == "West") return 3;
+                                
+    
             
-                        if(randompos==0)
+                        if(m_trust_states[north_router][2] < m_trust_states[east_router][3])
                             outport_dirn = "North";
             
                         else 
                             outport_dirn = "East";
            
-                        vect.clear();
+                        // vect.clear();
 
                 }      
                 
@@ -404,23 +502,24 @@ RoutingUnit:: outportComputeDXY(RouteInfo route,
             else if(y_hops < 0)
                 {
                 
-                    
-                        vect.push_back(0);
-                        vect.push_back(1);
-           
 
-            
-                        int randompos= rand()%vect.size();
+                        // if(direction == "North") return 0;
+                        // if(direction == "East") return 1;
+                        // if(direction == "South") return 2;
+                        // if(direction == "West") return 3;
 
+
+                        int south_router = getRoutingUnitNumber(my_id, "South", num_cols);
+                        int east_router = getRoutingUnitNumber(my_id, "East", num_cols);
             
             
-                        if(randompos==0)
+                       if(m_trust_states[south_router][0] < m_trust_states[east_router][3])
                             outport_dirn = "South";
                         else 
                             outport_dirn = "East";
 
 
-                        vect.clear();
+                        // vect.clear();
 
                 }
 
@@ -439,22 +538,30 @@ RoutingUnit:: outportComputeDXY(RouteInfo route,
                   
 
 
-                        vect.push_back(0);
-                        vect.push_back(1);
+                        // vect.push_back(0);
+                        // vect.push_back(1);
            
 
             
-                        int randompos= rand()%vect.size();
+                       // int randompos= rand()%vect.size();
 
+                        int north_router = getRoutingUnitNumber(my_id, "North", num_cols);
+                        int west_router = getRoutingUnitNumber(my_id, "West", num_cols);   
+
+
+                        // if(direction == "North") return 0;
+                        // if(direction == "East") return 1;
+                        // if(direction == "South") return 2;
+                        // if(direction == "West") return 3;
+         
             
-            
-                        if(randompos==0)
+                         if(m_trust_states[north_router][2] < m_trust_states[west_router][1])
                             outport_dirn = "North";
                         else 
                             outport_dirn = "West";
 
 
-                        vect.clear();
+                      //  vect.clear();
                     }
                     
               
@@ -464,22 +571,29 @@ RoutingUnit:: outportComputeDXY(RouteInfo route,
                 
                     
                     
-                        vect.push_back(0);
-                        vect.push_back(1);
+                        // vect.push_back(0);
+                        // vect.push_back(1);
            
 
             
-                        int randompos= rand()%vect.size();
+                        // int randompos= rand()%vect.size();
 
+                        int west_router = getRoutingUnitNumber(my_id, "West", num_cols);
+                        int south_router = getRoutingUnitNumber(my_id, "South", num_cols); 
+
+                        // if(direction == "North") return 0;
+                        // if(direction == "East") return 1;
+                        // if(direction == "South") return 2;
+                        // if(direction == "West") return 3;
+           
             
-            
-                        if(randompos==0)
+                         if(m_trust_states[west_router][1] < m_trust_states[south_router][0])
                             outport_dirn = "West";
                         else 
                             outport_dirn = "South";
 
 
-                        vect.clear();
+                       // vect.clear();
                     }
                     
                     
@@ -487,9 +601,8 @@ RoutingUnit:: outportComputeDXY(RouteInfo route,
 
 
     }//NSS
-    return m_outports_dirn2idx[outport_dirn];
-    
 
+    return m_outports_dirn2idx[outport_dirn];
 }
 
 
@@ -635,11 +748,11 @@ RoutingUnit::outportComputeYX(RouteInfo route,
         }
     } else if (x_hops > 0) {
         if (x_dirn) {
-            assert(inport_dirn == "Local" || inport_dirn == "West");
+            //assert(inport_dirn == "Local" || inport_dirn == "West");
             //std:: cout << "Going to East\n";
             outport_dirn = "East";
         } else {
-            assert(inport_dirn == "Local" || inport_dirn == "East");
+            //assert(inport_dirn == "Local" || inport_dirn == "East");
             //std:: cout << "Going to West\n";
             outport_dirn = "West";
         }

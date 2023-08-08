@@ -91,13 +91,6 @@ InputUnit::wakeup()
 
     int mesh_cols = m_router->get_net_ptr()->getNumCols();
 
-    int num_nodes = mesh_cols*mesh_cols;
-    NI_boundary0 = 0; 
-    NI_boundary1 = num_nodes; 
-    NI_boundary2 = num_nodes*2; 
-    NI_boundary3 = num_nodes*3;
-
-
 
 
     if (m_in_link->isReady(curTick())) {
@@ -124,17 +117,6 @@ InputUnit::wakeup()
             int src_rtr = t_route.src_router; int dest_rtr = t_route.dest_router;
             int src_ni = t_route.src_ni; int dest_ni = t_route.dest_ni;
             int my_id = m_router->get_id();
-
-            // Total L1 requests
-            if(
-                my_id ==src_rtr &&
-                t_flit->get_vnet()==0 &&
-                src_ni >=NI_boundary0 && src_ni <NI_boundary1 && dest_ni >= NI_boundary1 && dest_ni < NI_boundary2
-              )
-            {
-                m_router->get_net_ptr()->increment_total_L1_requests();
-            }           
-
 
 
 
@@ -178,19 +160,30 @@ InputUnit::wakeup()
 
             // Route computation for this vc
                         // std::cout << "Flit id here : " << t_flit -> get_flit_id() << "\n";
-            int outport;
+                        int outport;
                         // int original_router_id;
                         if (t_flit->isModified() && m_router->get_id() == t_flit->modifiedLocation())
                         {
                             int original_router_id = t_flit->getOriginalLocation();
                             int packet_id = t_flit->getPacketID();
+
+                            if((t_flit -> get_path().size() > 0) && (t_flit -> get_direction().size() > 0)){
+                                m_router -> decrement_trust(t_flit->get_path(), t_flit-> get_direction() );
+                            }
+
                             std::cout << "\n Rerouted packet : " << packet_id << " reached : " << m_router->get_id()  << " from : " << original_router_id << " \n\n\n";
                             outport = 1;
                         }
                         else
                         {
+                            if(m_router->get_id() == t_flit->get_route().dest_router && (t_flit -> get_path().size() > 0) && (t_flit -> get_direction().size() > 0) ) 
+                            {
+                                m_router -> increment_trust(t_flit->get_path(), t_flit-> get_direction());
+                            }
+
+
                             outport = m_router->route_compute(t_flit->get_route(),
-                                                              m_id, m_direction, t_flit->get_flit_id(), t_flit->isModified(), t_flit -> get_retransmitted_value());
+                                                              m_id, m_direction, t_flit->get_flit_id(), t_flit->isModified(), t_flit -> get_retransmitted_value(), t_flit);
                         }
             
             // Update output port in VC

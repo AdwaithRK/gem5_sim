@@ -49,9 +49,7 @@ struct PacketBufferEntry
     gem5::Tick received_time;
 };
 
-
 static map<int, queue<PacketBufferEntry>> PacketBuffer;
-
 
 namespace gem5
 {
@@ -210,7 +208,6 @@ namespace gem5
             NetworkInterface::wakeup()
             {
 
-
                 std::ostringstream oss;
 
                 int routerID;
@@ -273,10 +270,10 @@ namespace gem5
                         int vnet = t_flit->get_vnet();
                         t_flit->set_dequeue_time(curTick());
 
-                        // if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
-                        //     t_flit->print_path();
-
                         MsgPtr temp = t_flit->get_msg_ptr();
+
+                        if (temp->getRedirectedFlagValue())
+                            t_flit->print_path();
 
                         // if(temp -> getRedirectedFlagValue()){
                         //      //if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_){
@@ -291,9 +288,6 @@ namespace gem5
                         //     continue;
 
                         // }
-
-                        if (temp->getRedirectedFlagValue())
-                            cout << "blah\n";
 
                         // If a tail flit is received, enqueue into the protocol buffers
                         // if space is available. Otherwise, exchange non-tail flits for
@@ -318,7 +312,8 @@ namespace gem5
                             else if (!iPort->messageEnqueuedThisCycle &&
                                      outNode_ptr[vnet]->areNSlotsAvailable(1, curTime))
                             {
-                                if(temp -> getIsRetransmitted()) std::cout << "\nRetransmitted reached destination!!!\n";
+                                if (temp->getIsRetransmitted())
+                                    std::cout << "\nRetransmitted reached destination!!!\n";
                                 // Space is available. Enqueue to protocol buffer.
                                 outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
                                                            cyclesToTicks(Cycles(1)));
@@ -361,28 +356,27 @@ namespace gem5
                     }
                 }
 
-
-               while (!PacketBuffer[m_id].empty())
+                while (!PacketBuffer[m_id].empty())
                 {
 
                     // if (PacketBuffer[m_id].front().received_time <= curTick())
                     // {
-                        cout << "retransmitting!!\n";
-                        PacketBuffer[m_id].front().msg_ptr->resetRedirected();
-                        if (flitisizeMessage(PacketBuffer[m_id].front().msg_ptr, PacketBuffer[m_id].front().vnet, true))
-                        {
-                            PacketBuffer[m_id].pop();
-                        }else{
-                            break;
-                        }
+                    cout << "retransmitting!!\n";
+                    PacketBuffer[m_id].front().msg_ptr->resetRedirected();
+                    if (flitisizeMessage(PacketBuffer[m_id].front().msg_ptr, PacketBuffer[m_id].front().vnet, true))
+                    {
+                        PacketBuffer[m_id].pop();
+                    }
+                    else
+                    {
+                        break;
+                    }
                     // }
                     // else
                     // {
                     //     PacketBuffer[m_id].pop();
                     // }
                 }
-
-
 
                 /****************** Check the incoming credit link *******/
 
@@ -402,8 +396,6 @@ namespace gem5
                     }
                 }
 
-   
-
                 // It is possible to enqueue multiple outgoing credit flits if a message
                 // was unstalled in the same cycle as a new message arrives. In this
                 // case, we should schedule another wakeup to ensure the credit is sent
@@ -418,7 +410,7 @@ namespace gem5
                         iPort->outCreditLink()->scheduleEventAbsolute(clockEdge(Cycles(1)));
                     }
                 }
-               // checkReschedule();
+                // checkReschedule();
                 scheduleEvent(Cycles(5));
             }
 
@@ -484,7 +476,8 @@ namespace gem5
             bool
             NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet, bool isRetranmitting)
             {
-                if(isRetranmitting) msg_ptr->setIsRetransmitted();
+                if (isRetranmitting)
+                    msg_ptr->setIsRetransmitted();
                 Message *net_msg_ptr = msg_ptr.get();
                 NetDest net_msg_dest = net_msg_ptr->getDestination();
 
@@ -577,8 +570,8 @@ namespace gem5
                         // fl->print(std::cout);
                     }
 
-                    if(isRetranmitting)
-                        std::cout << "Retransmitting packet : " <<  packet_id  << "\n\n";
+                    if (isRetranmitting)
+                        std::cout << "Retransmitting packet : " << packet_id << "\n\n";
 
                     m_ni_out_vcs_enqueue_time[vc] = curTick();
                     outVcState[vc].setState(ACTIVE_, curTick());
@@ -610,12 +603,10 @@ namespace gem5
                     //     vc_busy_counter[vnet] = 0;
                     //     return ((vnet * m_vc_per_vnet) + delta);
                     // }
-
-
                 }
 
                 vc_busy_counter[vnet] += 1;
-                
+
                 panic_if(vc_busy_counter[vnet] > m_deadlock_threshold + 250000000,
                          "%s: Possible network deadlock in vnet: %d at time: %llu \n",
                          name(), vnet, curTick());

@@ -159,10 +159,21 @@ Router::getInportDirection(int inport)
 }
 
 int
-Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id, bool isModified, bool isRetransmitted)
+Router::route_compute(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id, bool isModified, bool isRetransmitted, flit *t_flit)
 {
-    return routingUnit.outportCompute(route, inport, inport_dirn, flit_id, isModified, isRetransmitted);
+    return routingUnit.outportCompute(route, inport, inport_dirn, flit_id, isModified, isRetransmitted, t_flit);
 }
+
+void
+Router::increment_trust(vector<int> indexes, vector<string> directions){
+    routingUnit.incrementTrust(indexes, directions);
+}
+
+void
+Router::decrement_trust(vector<int> indexes, vector<string> directions){
+    routingUnit.decrementTrust(indexes, directions);
+}
+
 
 void
 Router::grant_switch(int inport, flit *t_flit)

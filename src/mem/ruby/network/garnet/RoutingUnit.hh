@@ -55,7 +55,7 @@ class RoutingUnit
     RoutingUnit(Router *router);
     int outportCompute(RouteInfo route,
                       int inport,
-                      PortDirection inport_dirn, int flit_id, bool isModified, bool isRetranmitted);
+                      PortDirection inport_dirn, int flit_id, bool isModified, bool isRetranmitted, flit* t_flit);
 
     // Topology-agnostic Routing Table based routing (default)
     void addRoute(std::vector<NetDest>& routing_table_entry);
@@ -73,12 +73,15 @@ class RoutingUnit
                          int inport,
                          PortDirection inport_dirn, int flit_id);
 
+    int getRoutingUnitNumber(int router_no, PortDirection outport_dirn, int num_cols);
+
     int outportComputeXYModified(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id);
 
-    int outportComputeDXY(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id);
+    int outportComputeDXY(RouteInfo route, int inport, PortDirection inport_dirn, int flit_id, flit* t_flit);
 
     int outportComputeYX(RouteInfo route,int inport, PortDirection inport_dirn, int flit_id);
 
+    int directionToIndex(std::string direction);
 
     // Custom Routing Algorithm using Port Directions
     int outportComputeCustom(RouteInfo route,
@@ -88,6 +91,8 @@ class RoutingUnit
     // Returns true if vnet is present in the vector
     // of vnets or if the vector supports all vnets.
     bool supportsVnet(int vnet, std::vector<int> sVnets);
+    void decrementTrust(std::vector<int> indexes, std::vector<string> directions);
+    void incrementTrust(std::vector<int> indexes, std::vector<string> directions);
 
 
   private:
